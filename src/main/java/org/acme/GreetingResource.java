@@ -1,16 +1,22 @@
 package org.acme;
 
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import org.acme.model.rest.ColumnHeaderRest;
 import org.acme.model.rest.GridRest;
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Path("/")
 public class GreetingResource {
@@ -50,5 +56,35 @@ public class GreetingResource {
         rs.setHeader(lst);
 
         return rs;
+    }
+
+    @POST
+    @Path("/upload")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response uploadFile(MultipartFormDataInput input) {
+        try {
+            InputPart inputPart = input.getFormDataMap().get("file").get(0);
+            String fileName = inputPart.getHeaders().getFirst("Content-Disposition");
+
+            if (fileName != null) {
+                String[] contentDisposition = fileName.split(";");
+                for (String cd : contentDisposition) {
+                    if (cd.trim().startsWith("filename")) {
+
+                        //Reads the file
+                        InputStream inputStream = inputPart.getBody(InputStream.class, null);
+                        String fileContent = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
+                                .lines().collect(Collectors.joining("\n"));
+
+                        return Response.ok(fileContent).build();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error processing file").build();
+        }
+
+        return Response.status(Response.Status.BAD_REQUEST).build();
     }
 }
