@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/")
-public class GreetingResource {
+public class ImportController {
 
     @Inject
     ImportService importService;
