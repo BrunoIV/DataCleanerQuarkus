@@ -1,4 +1,4 @@
-package org.acme;
+package org.acme.controllers;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;

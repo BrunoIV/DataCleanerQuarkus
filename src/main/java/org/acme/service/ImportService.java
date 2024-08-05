@@ -45,7 +45,7 @@ public class ImportService {
 			for (int line = 0; line < list.size(); line++) {
 				for (int j = 0; j < list.get(line).size(); j++) {
 					if(line == 0) {
-						rs.addHeader(new ColumnHeaderRest("Column " + j, "column_" + j, true));
+						rs.addHeader(new ColumnHeaderRest("Column " + j, "column_" + j, true, j==0));
 					}
 					rs.addValue(line, "column_"+j, list.get(line).get(j));
 				}
@@ -83,8 +83,10 @@ public class ImportService {
 	}
 
 	private void setGridHeadersFromJson(JsonObject jsonObject, GridRest rs ) {
+		boolean drag = true;
 		for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
-			rs.addHeader(new ColumnHeaderRest(entry.getKey(), entry.getKey(),true));
+			rs.addHeader(new ColumnHeaderRest(entry.getKey(), entry.getKey(),true, drag));
+			drag=false;
 		}
 	}
 
