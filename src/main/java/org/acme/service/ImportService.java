@@ -10,6 +10,7 @@ import org.acme.model.rest.GridRest;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.csv.QuoteMode;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import java.io.*;
@@ -40,14 +41,20 @@ public class ImportService {
 		CSVParser parser = null;
 		GridRest rs = new GridRest();
 		try {
-			parser = new CSVParser(reader, CSVFormat.EXCEL);
+
+			CSVFormat csvFormat = CSVFormat.Builder.create()
+					.setIgnoreEmptyLines(true)
+					.setQuoteMode(QuoteMode.NONE)
+					.build();
+
+			parser = new CSVParser(reader, csvFormat);
 			List<CSVRecord> list = parser.getRecords();
 			for (int line = 0; line < list.size(); line++) {
 				for (int j = 0; j < list.get(line).size(); j++) {
-					if(line == 0) {
-						rs.addHeader(new ColumnHeaderRest("Column " + j, "column_" + j, true, j==0));
+					if (line == 0) {
+						rs.addHeader(new ColumnHeaderRest("Column " + j, "column_" + j, true, j == 0));
 					}
-					rs.addValue(line, "column_"+j, list.get(line).get(j));
+					rs.addValue(line, "column_" + j, list.get(line).get(j));
 				}
 			}
 		} catch (IOException e) {
@@ -94,7 +101,12 @@ public class ImportService {
 		for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
 			String key = entry.getKey();
 			JsonElement value = entry.getValue();
-			rs.addValue(line, key, value.toString());
+			String valueString = null;
+
+			if(!value.isJsonNull()) {
+				valueString = value.getAsString();
+			}
+			rs.addValue(line, key, valueString);
 		}
 	}
 }
