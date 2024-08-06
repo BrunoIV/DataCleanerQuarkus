@@ -90,6 +90,15 @@ public class ImportService {
 	}
 
 	private void setGridHeadersFromJson(JsonObject jsonObject, GridRest rs ) {
+
+		//Auto-incremental column
+		ColumnHeaderRest col = new ColumnHeaderRest("", "n",false,false);
+		col.setValueGetter("node.rowIndex + 1");
+		col.setWidth(50);
+		col.setResizable(false);
+		col.setCellClass("bg-fake-header");
+		rs.addHeader(col);
+
 		boolean drag = true;
 		for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
 			rs.addHeader(new ColumnHeaderRest(entry.getKey(), entry.getKey(),true, drag));
