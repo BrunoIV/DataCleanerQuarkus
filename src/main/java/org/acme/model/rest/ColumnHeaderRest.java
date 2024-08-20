@@ -11,8 +11,8 @@ public class ColumnHeaderRest {
 	private String field;
 	private Integer rowIndex;
 	private Integer width;
-	private Boolean editable;
-	private Boolean rowDrag;
+	private Boolean editable = true;
+	private Boolean rowDrag = false;
 	private Boolean resizable;
 	private String cellClass;
 
@@ -28,5 +28,10 @@ public class ColumnHeaderRest {
 		this.field = field;
 		this.editable = editable;
 		this.rowDrag = rowDrag;
+	}
+
+	public ColumnHeaderRest(String headerName) {
+		this.headerName = headerName;
+		this.field = headerName;
 	}
 }
