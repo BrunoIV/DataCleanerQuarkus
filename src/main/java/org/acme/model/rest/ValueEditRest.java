@@ -5,9 +5,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ColumnEditRest {
+public class ValueEditRest {
 	private String headerName;
-	private String field;
-	private Boolean editable;
+	private String value;
 	private Integer rowIndex;
 }
