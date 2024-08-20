@@ -2,7 +2,6 @@ package org.acme.service;
 
 import com.google.gson.*;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.core.StreamingOutput;
 import org.acme.model.rest.ColumnHeaderRest;
 import org.acme.model.rest.GridRest;
 import org.apache.commons.csv.CSVFormat;
