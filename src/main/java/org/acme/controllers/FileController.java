@@ -1,17 +1,12 @@
 package org.acme.controllers;
-
-import com.google.gson.Gson;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.StreamingOutput;
 import org.acme.model.rest.GridRest;
 import org.acme.service.GridService;
 import org.acme.service.FileService;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
-
-import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.Map;
 
