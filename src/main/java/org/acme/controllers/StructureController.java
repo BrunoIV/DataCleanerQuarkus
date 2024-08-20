@@ -14,14 +14,6 @@ public class StructureController {
     @Inject
     StructureService structureService;
 
-
-    @GET
-    @Path("/getColumns")
-    @Produces(MediaType.APPLICATION_JSON)
-    public GridRest getColumns() {
-        return structureService.getColumns();
-    }
-
     @POST
     @Path("/modifyColumn")
     @Consumes(MediaType.APPLICATION_JSON)

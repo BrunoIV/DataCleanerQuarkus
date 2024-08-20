@@ -1,10 +1,8 @@
 package org.acme.service;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.core.StreamingOutput;
 import org.acme.model.rest.ColumnHeaderRest;
 import org.acme.model.rest.GridRest;
 import org.apache.commons.csv.CSVFormat;
@@ -19,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @ApplicationScoped
-public class ImportService {
+public class FileService {
 
 	public String multipartToString(MultipartFormDataInput input){
 		StringBuilder stringBuilder = new StringBuilder();
@@ -44,6 +42,7 @@ public class ImportService {
 
 			CSVFormat csvFormat = CSVFormat.Builder.create()
 					.setIgnoreEmptyLines(true)
+					.setEscape('\\')
 					.setQuoteMode(QuoteMode.NONE)
 					.build();
 
@@ -117,5 +116,24 @@ public class ImportService {
 			}
 			rs.addValue(line, key, valueString);
 		}
+	}
+
+	public String exportAsJson(GridRest grid) {
+		List<Map<String, Object>> data = grid.getValues();
+		Gson gson = new Gson();
+		return gson.toJson(data);
+	}
+
+	public String exportAsCsv(GridRest grid) {
+		List<Map<String, Object>> lst = grid.getValues();
+
+		String out = "";
+		for (Map<String, Object> data: lst) {
+			for (Map.Entry<String, Object> entry : data.entrySet()) {
+				out += entry.getValue().toString() + ",";
+			}
+			out += "\n";
+		}
+		return out;
 	}
 }
