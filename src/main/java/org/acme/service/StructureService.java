@@ -50,19 +50,16 @@ public class StructureService {
 		indexes.sort(Comparator.reverseOrder());
 
 		//Removes headers
+		List<String> keys = new ArrayList<>();
 		for (int index: indexes) {
+			keys.add(grid.getHeader().get(index).getHeaderName());
 			grid.getHeader().remove(index);
 		}
 
 		//Removes cells line by line
-		List<Map<String, Object>> rows = grid.getValues();
-		for (Map<String, Object> row: rows) {
-			int index = 0;
-			for (String key : row.keySet()) {
-				if(indexes.contains(index)) {
-					row.remove(key);
-				}
-				index++;
+		for (Map<String, Object> row: grid.getValues()) {
+			for (String key : keys) {
+				row.remove(key);
 			}
 		}
 		return grid;
