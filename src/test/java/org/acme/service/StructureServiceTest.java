@@ -10,6 +10,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
@@ -51,16 +54,41 @@ public class StructureServiceTest {
 		GridRest newGrid = this.structureService.addRow(0);
 		assertEquals(rows + 1, newGrid.getValues().size());
 	}
+	@Test
+	public void testDeleteColumns() {
+		GridRest grid = getExampleGrid();
+		Mockito.when(gridService.getGrid()).thenReturn(grid);
+
+		int cols = grid.getHeader().size();
+		int colsData = grid.getValues().get(0).size();
+
+		GridRest newGrid = this.structureService.deleteColumns(Arrays.asList(1, 2));
+		assertEquals(cols - 2, newGrid.getHeader().size());
+		assertEquals(colsData - 2, newGrid.getValues().get(0).size());
+	}
+
+	@Test
+	public void testDeleteRows() {
+		GridRest grid = getExampleGrid();
+		Mockito.when(gridService.getGrid()).thenReturn(grid);
+
+		int rows = grid.getValues().size();
+		GridRest newGrid = this.structureService.deleteRows(Arrays.asList(4, 1, 2));
+		assertEquals(rows - 3, newGrid.getValues().size());
+	}
 
 	private GridRest getExampleGrid() {
 		GridRest grid = new GridRest();
 		grid.addHeader(new ColumnHeaderRest("id"));
 		grid.addHeader(new ColumnHeaderRest("name"));
+		grid.addHeader(new ColumnHeaderRest("surname"));
 
-		grid.addValue(0, "id", "id_0");
-		grid.addValue(0, "name", "name_0");
-		grid.addValue(1, "id", "id_1");
-		grid.addValue(1, "name", "name_1");
+		for(int i = 0; i < 5; i++){
+			grid.addValue(i, "id", "id_" + i);
+			grid.addValue(i, "name", "name_" + i);
+			grid.addValue(i, "surname", "surname_" + i);
+		}
+
 		return grid;
 	}
 }
