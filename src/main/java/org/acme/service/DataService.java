@@ -2,12 +2,17 @@ package org.acme.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import org.acme.dao.DataDao;
+import org.acme.dao.FileDao;
+import org.acme.db.FileDb;
 import org.acme.model.rest.ColumnHeaderRest;
 import org.acme.model.rest.GridRest;
 import org.acme.model.rest.ValueEditRest;
 import org.acme.util.Utils;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +20,15 @@ import java.util.Map;
 public class DataService {
 	@Inject
 	GridService gridService;
+
+	@Inject
+	FileService fileService;
+
+	@Inject
+	DataDao dataDao;
+
+	@Inject
+	FileDao fileDao;
 
 	private static final String UPPERCASE = "uppercase";
 	private static final String LOWERCASE = "lowercase";
@@ -26,6 +40,7 @@ public class DataService {
 	private static final String VALIDATE_ALPHANUMERIC = "validate_alphanumeric";
 
 
+	@Transactional
 	public GridRest normalize(String functionName, String columns) {
 		List<Integer> columnList = Utils.text2IntArray(columns);
 
@@ -33,7 +48,7 @@ public class DataService {
 			ColumnHeaderRest header = this.gridService.getGrid().getHeader().get(column);
 
 			if(header != null) {
-				List<Map<String, Object>> gridValues = this.gridService.getGrid().getValues();
+				List<LinkedHashMap<String, Object>> gridValues = this.gridService.getGrid().getValues();
 				for (Map<String, Object> values: gridValues) {
 					String headerName = header.getHeaderName();
 					String value = (String) values.get(headerName);
@@ -62,6 +77,7 @@ public class DataService {
 			}
 		}
 
+		fileService.saveCurrentFile();
 		return gridService.getGrid();
 	}
 
@@ -73,7 +89,7 @@ public class DataService {
 			ColumnHeaderRest header = this.gridService.getGrid().getHeader().get(column);
 
 			if (header != null) {
-				List<Map<String, Object>> rows = this.gridService.getGrid().getValues();
+				List<LinkedHashMap<String, Object>> rows = this.gridService.getGrid().getValues();
 
 				for (int i = 0; i < rows.size(); i++) {
 					String headerName = header.getHeaderName();
@@ -112,6 +128,7 @@ public class DataService {
 		}
 	}
 
+	@Transactional
 	public GridRest modifyValue(ValueEditRest value) {
 		Map<String, Object> valuesRow = this.gridService.getGrid().getValues().get(value.getRowIndex());
 
@@ -119,6 +136,27 @@ public class DataService {
 			valuesRow.put(value.getHeaderName(), value.getValue());
 		}
 
+		String csv = this.fileService.exportAsCsv(gridService.getGrid());
+		FileDb db = fileDao.getFileById(this.gridService.getIdFile());
+		if(db != null) {
+			db.setFileContent(csv);
+			fileDao.putFile(db);
+		}
+
+		fileService.saveCurrentFile();
 		return gridService.getGrid();
+	}
+
+	@Transactional
+	public GridRest getData(int idFile) {
+		FileDb db = this.fileDao.getFileById(idFile);
+
+		if(db != null) {
+			GridRest rest = this.fileService.csv2grid(db.getFileContent());
+			this.gridService.setGrid(rest);
+			this.gridService.setIdFile(idFile);
+			return rest;
+		}
+		return null;
 	}
 }

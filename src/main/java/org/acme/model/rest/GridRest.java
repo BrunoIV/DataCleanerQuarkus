@@ -4,17 +4,24 @@ import lombok.Getter;
 import lombok.Setter;
 import org.acme.util.Utils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Getter
 @Setter
 public class GridRest {
-	private List<Map<String, Object>> values = new ArrayList<>();
+	private List<LinkedHashMap<String, Object>> values = new ArrayList<>();
 	private List<ColumnHeaderRest> header = new ArrayList<>();
 	private Map<Integer, String> validationErrors = new HashMap<>();
+
+	public GridRest() {
+		ColumnHeaderRest col = new ColumnHeaderRest("#", "n",false,false);
+		col.setValueGetter("node.rowIndex + 1");
+		col.setWidth(50);
+		col.setResizable(false);
+		col.setCellClass("bg-fake-header");
+
+		this.header.add(col);
+	}
 
 	public void addHeader(ColumnHeaderRest header) {
 		this.header.add(header);
@@ -25,7 +32,7 @@ public class GridRest {
 	}
 	public void addValue(int row, String key, Object value) {
 		if(this.values.size() <= row) {
-			this.values.add(new HashMap<>());
+			this.values.add(new LinkedHashMap<>());
 		}
 		this.values.get(row).put(key, value);
 	}

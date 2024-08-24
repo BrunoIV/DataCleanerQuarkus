@@ -3,13 +3,19 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.acme.model.rest.FileRest;
 import org.acme.model.rest.GridRest;
 import org.acme.service.GridService;
 import org.acme.service.FileService;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
+
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Handles importing, exporting, creating, modifying and deleting files
+ */
 @Path("/file")
 public class FileController {
 
@@ -20,23 +26,44 @@ public class FileController {
     GridService gridService;
 
     @GET
-    @Path("/getExampleData")
+    @Path("/getFiles")
     @Produces(MediaType.APPLICATION_JSON)
-    public GridRest getExampleData() {
-        return gridService.getGrid();
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public List<FileRest> getFiles() {
+        return fileService.getFiles();
     }
+
+    @POST
+    @Path("/createFile")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public boolean createFile(@FormParam("name") String name) {
+        return fileService.createFile(name);
+    }
+
+    @POST
+    @Path("/deleteFile")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public boolean deleteFile(@FormParam("id") int id) {
+        return fileService.deleteFile(id);
+    }
+
+    @POST
+    @Path("/renameFile")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public boolean renameFile(@FormParam("id") int id, @FormParam("id") String name) {
+        return fileService.renameFile(id, name);
+    }
+
 
     @POST
     @Path("/import/csv")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response importCsv(MultipartFormDataInput input) {
-        GridRest rs = fileService.multipartCsvToGrid(input);
-        if (rs == null) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error processing file").build();
-        }
-        this.gridService.setGrid(rs);
-        return Response.ok(rs).build();
+    public GridRest importCsv(MultipartFormDataInput input) {
+        return fileService.importCsv(input);
     }
 
 
@@ -44,10 +71,8 @@ public class FileController {
     @Path("/import/json")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response importJson(MultipartFormDataInput input) {
-        GridRest rs = fileService.multipartJsonToGrid(input);
-        this.gridService.setGrid(rs);
-        return Response.ok(this.gridService.getGrid()).build();
+    public GridRest importJson(MultipartFormDataInput input) {
+        return fileService.importJson(input);
     }
 
     @GET
@@ -76,7 +101,7 @@ public class FileController {
     @Path("/export/html")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response exportHtml() {
-        List<Map<String, Object>> lst = this.gridService.getGrid().getValues();
+        List<LinkedHashMap<String, Object>> lst = this.gridService.getGrid().getValues();
 
         StringBuilder sb = new StringBuilder();
         sb.append("<table border=\"1\">");

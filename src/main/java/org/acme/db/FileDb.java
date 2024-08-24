@@ -15,7 +15,7 @@ public class FileDb {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "id")
 	@Id
-	private Long id;
+	private Integer id;
 
 	@Column(name = "name")
 	private String name;
@@ -25,4 +25,7 @@ public class FileDb {
 
 	@Column(name = "creationDate")
 	private Date creationDate;
+
+	@Column(name = "file_content", length = 2147483647)
+	private String fileContent;
 }

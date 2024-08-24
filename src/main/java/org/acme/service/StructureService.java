@@ -11,6 +11,7 @@ import java.util.*;
 public class StructureService {
 
 	@Inject GridService gridService;
+	@Inject FileService fileService;
 
 	public GridRest addColumn(String name, int columnPosition) {
 		GridRest grid = gridService.getGrid();
@@ -20,16 +21,23 @@ public class StructureService {
 		//Move the "draggable" icon from the first column
 		if(columnPosition == 1) {
 			newColumn.setRowDrag(true);
-			grid.getHeader().get(1).setRowDrag(false);
+
+			//Removes the "drag" from the old 1st column
+			if(grid.getHeader().size() > 1) {
+				grid.getHeader().get(1).setRowDrag(false);
+			}
 		}
 
 		grid.addHeader(columnPosition, newColumn);
+		fileService.saveCurrentFile();
 		return grid;
 	}
 
 	public GridRest addRow(int position) {
-		gridService.getGrid().getValues().add(position, new HashMap<>());
-		return gridService.getGrid();
+		GridRest grid = gridService.getGrid();
+		grid.getValues().add(position, new LinkedHashMap<>());
+		fileService.saveCurrentFile();
+		return grid;
 	}
 
 	public GridRest deleteRows(List<Integer> indexes) {
@@ -40,6 +48,7 @@ public class StructureService {
 		for (int index: indexes) {
 			grid.getValues().remove(index);
 		}
+		fileService.saveCurrentFile();
 		return grid;
 	}
 
@@ -52,7 +61,7 @@ public class StructureService {
 		//Removes headers
 		List<String> keys = new ArrayList<>();
 		for (int index: indexes) {
-			keys.add(grid.getHeader().get(index).getHeaderName());
+			keys.add(grid.getHeader().get(index).getField());
 			grid.getHeader().remove(index);
 		}
 
@@ -62,6 +71,8 @@ public class StructureService {
 				row.remove(key);
 			}
 		}
+
+		fileService.saveCurrentFile();
 		return grid;
 	}
 }
