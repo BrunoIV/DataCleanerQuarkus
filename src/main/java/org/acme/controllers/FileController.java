@@ -76,10 +76,10 @@ public class FileController {
     }
 
     @GET
-    @Path("/export/json")
+    @Path("/export/json/{id}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public Response exportJson() {
-        String json = this.fileService.exportAsJson(this.gridService.getGrid());
+    public Response exportJson(@PathParam("id") int idFile) {
+        String json = this.fileService.exportAsJson(idFile);
 
         return Response.ok(json)
                 .header("Content-Disposition", "attachment; filename=\"data.json\"")
@@ -87,39 +87,25 @@ public class FileController {
     }
 
     @GET
-    @Path("/export/csv")
+    @Path("/export/csv/{id}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public Response exportCsv() {
-        String csv = this.fileService.exportAsCsv(this.gridService.getGrid());
-
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response exportCsv(@PathParam("id") int idFile) {
+        String csv = this.fileService.exportAsCsv(idFile);
 
         return Response.ok(csv)
                 .header("Content-Disposition", "attachment; filename=\"data.csv\"")
-                .build();    }
+                .build();
+    }
 
     @GET
-    @Path("/export/html")
+    @Path("/export/html/{id}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public Response exportHtml() {
-        List<LinkedHashMap<String, Object>> lst = this.gridService.getGrid().getValues();
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response exportHtml(@PathParam("id") int idFile) {
+        String csv = this.fileService.exportAsHtml(idFile);
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("<table border=\"1\">");
-        for (Map<String, Object> data: lst) {
-            sb.append("<tr>");
-
-            for (Map.Entry<String, Object> entry : data.entrySet()) {
-               sb.append("<td>");
-               sb.append(entry.getValue());
-               sb.append("</td>");
-            }
-
-            sb.append("</tr>");
-
-        }
-        sb.append("</table>");
-
-        return Response.ok(sb.toString())
+        return Response.ok(csv)
                 .header("Content-Disposition", "attachment; filename=\"data.html\"")
                 .build();
 

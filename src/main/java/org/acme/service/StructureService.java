@@ -2,77 +2,107 @@ package org.acme.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.acme.model.rest.ColumnHeaderRest;
+import jakarta.transaction.Transactional;
 import org.acme.model.rest.GridRest;
+import org.acme.model.rest.TableRest;
 
 import java.util.*;
 
 @ApplicationScoped
 public class StructureService {
 
-	@Inject GridService gridService;
 	@Inject FileService fileService;
 
-	public GridRest addColumn(String name, int columnPosition) {
-		GridRest grid = gridService.getGrid();
+	@Inject DataService dataService;
 
-		ColumnHeaderRest newColumn = new ColumnHeaderRest(name);
+	public GridRest addColumn(String name, int columnPosition, int idFile) {
+		TableRest table = dataService.getFileAsTable(idFile);
 
-		//Move the "draggable" icon from the first column
-		if(columnPosition == 1) {
-			newColumn.setRowDrag(true);
+		if(table != null) {
+			table.addHeader(columnPosition, name);
 
-			//Removes the "drag" from the old 1st column
-			if(grid.getHeader().size() > 1) {
-				grid.getHeader().get(1).setRowDrag(false);
+			for(int i = 0; i < table.getValues().size(); i++) {
+				table.addValue(i, columnPosition, "");
 			}
+
+			fileService.putTable(idFile, table);
+			return dataService.table2grid(table);
 		}
 
-		grid.addHeader(columnPosition, newColumn);
-		fileService.saveCurrentFile();
-		return grid;
+		return null;
 	}
 
-	public GridRest addRow(int position) {
-		GridRest grid = gridService.getGrid();
-		grid.getValues().add(position, new LinkedHashMap<>());
-		fileService.saveCurrentFile();
-		return grid;
-	}
+	public GridRest addRow(int position, int idFile) {
+		TableRest table = dataService.getFileAsTable(idFile);
 
-	public GridRest deleteRows(List<Integer> indexes) {
-		GridRest grid = this.gridService.getGrid();
+		if(table != null) {
+			table.getValues().add(position, new ArrayList<>());
 
-		//From bigger to smaller to avoid problems with changes of indexes
-		indexes.sort(Comparator.reverseOrder());
-		for (int index: indexes) {
-			grid.getValues().remove(index);
+			fileService.putTable(idFile, table);
+			return dataService.table2grid(table);
 		}
-		fileService.saveCurrentFile();
-		return grid;
+		return null;
 	}
 
-	public GridRest deleteColumns(List<Integer> indexes) {
-		GridRest grid = this.gridService.getGrid();
+	public GridRest deleteRows(List<Integer> indexes, int idFile) {
+		TableRest table = dataService.getFileAsTable(idFile);
 
-		//From bigger to smaller to avoid problems with changes of indexes
-		indexes.sort(Comparator.reverseOrder());
-
-		//Removes headers
-		List<String> keys = new ArrayList<>();
-		for (int index: indexes) {
-			keys.add(grid.getHeader().get(index).getField());
-			grid.getHeader().remove(index);
-		}
-
-		//Removes cells line by line
-		for (Map<String, Object> row: grid.getValues()) {
-			for (String key : keys) {
-				row.remove(key);
+		if(table != null) {
+			//From bigger to smaller to avoid problems with changes of indexes
+			indexes.sort(Comparator.reverseOrder());
+			for (int index: indexes) {
+				table.getValues().remove(index);
 			}
+
+			fileService.putTable(idFile, table);
+			return dataService.table2grid(table);
 		}
 
-		fileService.saveCurrentFile();
-		return grid;
+		return null;
+	}
+
+	public GridRest deleteColumns(List<Integer> indexes, int idFile) {
+		TableRest table = dataService.getFileAsTable(idFile);
+
+		if(table != null) {
+			//From bigger to smaller to avoid problems with changes of indexes
+			indexes.sort(Comparator.reverseOrder());
+			for (int index: indexes) {
+				table.getHeader().remove(index);
+			}
+
+			List<List<String>> rows = table.getValues();
+			for (List<String> row : rows) {
+				for (int index: indexes) {
+					row.remove(index );
+				}
+			}
+
+			fileService.putTable(idFile, table);
+			return dataService.table2grid(table);
+		}
+
+		return null;
+	}
+
+	@Transactional
+	public GridRest joinColumns(List<Integer> indexes, int idFile) {
+		TableRest table = dataService.getFileAsTable(idFile);
+
+		if(table != null) {
+
+			List<List<String>> rows = table.getValues();
+			for (List<String> row : rows) {
+				StringBuilder newValue = new StringBuilder();
+				for (int column: indexes) {
+					newValue.append(row.get(column));
+				}
+
+				row.set(indexes.get(0), newValue.toString());
+			}
+			fileService.putTable(idFile, table);
+			return dataService.table2grid(table);
+		}
+		return null;
 	}
 }

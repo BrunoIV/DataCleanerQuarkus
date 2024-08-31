@@ -6,6 +6,7 @@ import jakarta.ws.rs.core.MediaType;
 import org.acme.model.rest.GridRest;
 import org.acme.model.rest.ValueEditRest;
 import org.acme.service.DataService;
+import org.acme.util.Utils;
 
 import java.util.Map;
 
@@ -27,16 +28,22 @@ public class DataController {
 
     @POST
     @Path("/normalize")
-    public GridRest normalize(Map<String, String> data) {
-        return dataService.normalize(data.get("functionName"), data.get("columns"));
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public GridRest normalize(@FormParam("functionName") String functionName,
+                              @FormParam("columns") String columns,
+                              @FormParam("idFile") int idFile) {
+        return dataService.normalize(functionName, Utils.text2IntArray(columns), idFile);
     }
+
 
     @POST
     @Path("/validate")
-    public GridRest validate(Map<String, String> data) {
-        return dataService.validate(data.get("functionName"), data.get("columns"));
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public GridRest validate(@FormParam("functionName") String functionName,
+                              @FormParam("columns") String columns,
+                              @FormParam("idFile") int idFile) {
+        return dataService.validate(functionName, Utils.text2IntArray(columns), idFile);
     }
-
 
     @POST
     @Path("/modifyValue")

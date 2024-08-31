@@ -14,7 +14,7 @@ public class GridRest {
 	private Map<Integer, String> validationErrors = new HashMap<>();
 
 	public GridRest() {
-		ColumnHeaderRest col = new ColumnHeaderRest("#", "n",false,false);
+		ColumnHeaderRest col = new ColumnHeaderRest("#", false,false);
 		col.setValueGetter("node.rowIndex + 1");
 		col.setWidth(50);
 		col.setResizable(false);

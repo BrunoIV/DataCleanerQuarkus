@@ -15,17 +15,11 @@ public class ColumnHeaderRest {
 	private Boolean rowDrag = false;
 	private Boolean resizable;
 	private String cellClass;
+	private Boolean suppressMovable = true;
 
-	public ColumnHeaderRest(String headerName, String field, boolean editable) {
+	public ColumnHeaderRest(String headerName, boolean editable, boolean rowDrag) {
 		this.headerName = headerName;
-		this.field = field;
-		this.editable = editable;
-		this.rowDrag = false;
-	}
-
-	public ColumnHeaderRest(String headerName, String field, boolean editable, boolean rowDrag) {
-		this.headerName = headerName;
-		this.field = field;
+		this.field = headerName;
 		this.editable = editable;
 		this.rowDrag = rowDrag;
 	}

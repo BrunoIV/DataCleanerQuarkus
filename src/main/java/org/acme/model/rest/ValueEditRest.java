@@ -6,7 +6,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ValueEditRest {
-	private String headerName;
 	private String value;
 	private Integer rowIndex;
+	private Integer colIndex;
+	private Integer idFile;
 }
