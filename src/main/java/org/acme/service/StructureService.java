@@ -32,11 +32,14 @@ public class StructureService {
 		return null;
 	}
 
+	@Transactional
 	public GridRest addRow(int position, int idFile) {
 		TableRest table = dataService.getFileAsTable(idFile);
 
 		if(table != null) {
-			table.getValues().add(position, new ArrayList<>());
+
+			List<String> list = new ArrayList<>(Collections.nCopies(table.getHeader().size(), ""));
+			table.getValues().add(position, list);
 
 			fileService.putTable(idFile, table);
 			return dataService.table2grid(table);
