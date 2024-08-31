@@ -51,4 +51,23 @@ public class DataController {
     public GridRest modifyValue(ValueEditRest value) {
         return dataService.modifyValue(value);
     }
+
+    @POST
+    @Path("/fillAutoIncremental")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public GridRest fillAutoIncremental(
+                              @FormParam("columns") String columns,
+                              @FormParam("idFile") int idFile) {
+        return dataService.fillAutoIncremental(Utils.text2IntArray(columns), idFile);
+    }
+
+
+    @POST
+    @Path("/fillFixedValue")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public GridRest fillFixedValue(@FormParam("newValue") String newValue,
+                                        @FormParam("columns") String columns,
+                                        @FormParam("idFile") int idFile) {
+        return dataService.fillFixedValue(newValue, Utils.text2IntArray(columns), idFile);
+    }
 }

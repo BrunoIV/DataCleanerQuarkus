@@ -261,4 +261,39 @@ public class DataService {
 		return null;
 	}
 
+	public GridRest fillAutoIncremental(List<Integer> columnList, int idFile) {
+		TableRest table = this.getFileAsTable(idFile);
+
+		if(table != null) {
+
+			for (int i = 0; i < table.getValues().size(); i++){
+				for (int column : columnList) {
+					table.setValue(i, column, ""+ (i+1));
+				}
+			}
+
+			fileService.putTable(idFile, table);
+			return table2grid(table);
+		}
+
+		return null;
+	}
+
+	public GridRest fillFixedValue(String newValue, List<Integer> columnList, int idFile) {
+		TableRest table = this.getFileAsTable(idFile);
+
+		if(table != null) {
+
+			for (int i = 0; i < table.getValues().size(); i++){
+				for (int column : columnList) {
+					table.setValue(i, column, newValue);
+				}
+			}
+
+			fileService.putTable(idFile, table);
+			return table2grid(table);
+		}
+
+		return null;
+	}
 }

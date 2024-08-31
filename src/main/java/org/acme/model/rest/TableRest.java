@@ -42,11 +42,8 @@ public class TableRest {
 		this.values.add(new ArrayList<>());
 	}
 
-	public void addRow(int position) {
 
-	}
-
-	public void addColumn(int position){
-
+	public void setValue(int row, int column, String s) {
+		this.values.get(row).set(column, s);
 	}
 }
