@@ -30,8 +30,7 @@ public class StructureServiceTest {
 
 
 
-	@InjectMock
-	private DataService dataService;
+	@InjectMock	private DataService dataService;
 
 	@Inject
 	private StructureService structureService;
