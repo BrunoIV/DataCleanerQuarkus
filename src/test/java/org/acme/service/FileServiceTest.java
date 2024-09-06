@@ -1,7 +1,6 @@
 package org.acme.service;
 
 
-import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.acme.model.rest.ColumnHeaderRest;
@@ -10,8 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 @QuarkusTest
 public class FileServiceTest {
 
@@ -19,9 +16,6 @@ public class FileServiceTest {
 
 	@Inject
 	private FileService fileService;
-
-	@InjectMock
-	private GridService gridService;
 
 	@BeforeEach
 	public void setup() {

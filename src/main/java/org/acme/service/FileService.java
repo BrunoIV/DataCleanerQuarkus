@@ -4,8 +4,6 @@ import com.google.gson.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.FormParam;
-import jakarta.ws.rs.core.Response;
 import org.acme.dao.FileDao;
 import org.acme.db.FileDb;
 import org.acme.model.rest.ColumnHeaderRest;
@@ -27,7 +25,6 @@ public class FileService {
 
 	@Inject FileDao fileDao;
 
-	@Inject GridService gridService;
 	@Inject DataService dataService;
 
 

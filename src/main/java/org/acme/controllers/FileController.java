@@ -5,13 +5,10 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.model.rest.FileRest;
 import org.acme.model.rest.GridRest;
-import org.acme.service.GridService;
 import org.acme.service.FileService;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Handles importing, exporting, creating, modifying and deleting files
@@ -21,9 +18,6 @@ public class FileController {
 
     @Inject
     FileService fileService;
-
-    @Inject
-    GridService gridService;
 
     @GET
     @Path("/getFiles")

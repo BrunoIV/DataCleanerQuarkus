@@ -2,7 +2,6 @@ package org.acme.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.persistence.Table;
 import jakarta.transaction.Transactional;
 import org.acme.dao.DataDao;
 import org.acme.dao.FileDao;
@@ -19,16 +18,10 @@ import org.apache.commons.csv.QuoteMode;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @ApplicationScoped
 public class DataService {
-	@Inject
-	GridService gridService;
-
 	@Inject
 	FileService fileService;
 
