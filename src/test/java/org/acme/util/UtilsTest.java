@@ -3,6 +3,8 @@ package org.acme.util;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
@@ -49,6 +51,12 @@ public class UtilsTest {
 	}
 
 	@Test
+	public void testText2IntArray() {
+		assertEquals(Utils.text2IntArray("1,4,5"), Arrays.asList(1,4,5));
+		assertTrue(Utils.text2IntArray(null).isEmpty());
+	}
+
+	@Test
 	public void testCapitalize_WhenTextIsEmpty() {
 		assertEquals(EMPTY_TEXT, Utils.capitalize(EMPTY_TEXT));
 	}
@@ -56,5 +64,17 @@ public class UtilsTest {
 	@Test
 	public void testCapitalize_WhenTextIsNull() {
 		assertEquals(EMPTY_TEXT, Utils.capitalize(NULL_TEXT));
+	}
+
+
+	@Test
+	public void testIsValidNumber() {
+		assertTrue(Utils.isValidNumber("9"));
+		assertTrue(Utils.isValidNumber("-9"));
+		assertTrue(Utils.isValidNumber("-0"));
+		assertFalse(Utils.isValidNumber("aa"));
+		assertFalse(Utils.isValidNumber("9a"));
+		assertFalse(Utils.isValidNumber(""));
+		assertFalse(Utils.isValidNumber(null));
 	}
 }
