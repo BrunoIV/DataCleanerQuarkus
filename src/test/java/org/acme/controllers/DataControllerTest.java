@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.*;
 @QuarkusTest
 public class DataControllerTest {
 	private static final int ID_FILE = 0;
+	private static final String NEW_VALUE = "new value";
 	private static final String FN_NAME = "function";
 	private static final List<Integer> COLUMNS = Arrays.asList(1,2,3);
 
@@ -91,6 +92,38 @@ public class DataControllerTest {
 				.body(new ValueEditRest())
 				.when()
 				.post("/data/modifyValue")
+				.then()
+				.statusCode(200)
+				.body(notNullValue());
+	}
+
+
+	@Test
+	public void testFillAutoIncrementalEndpoint() {
+		Mockito.when(dataService.fillAutoIncremental(anyList(), anyInt())).thenReturn(new GridRest());
+
+		given()
+				.contentType(ContentType.URLENC)
+				.formParam("columns", StringUtils.join(COLUMNS, ","))
+				.formParam("idFile", ID_FILE)
+				.when()
+				.post("/data/fillAutoIncremental")
+				.then()
+				.statusCode(200)
+				.body(notNullValue());
+	}
+
+	@Test
+	public void testFillFixedValueEndpoint() {
+		Mockito.when(dataService.fillFixedValue(anyString(), anyList(), anyInt())).thenReturn(new GridRest());
+
+		given()
+				.contentType(ContentType.URLENC)
+				.formParam("columns", StringUtils.join(COLUMNS, ","))
+				.formParam("idFile", ID_FILE)
+				.formParam("newValue", NEW_VALUE)
+				.when()
+				.post("/data/fillFixedValue")
 				.then()
 				.statusCode(200)
 				.body(notNullValue());

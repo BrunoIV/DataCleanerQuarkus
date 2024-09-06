@@ -53,10 +53,9 @@ public class FileController {
     @Path("/renameFile")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public boolean renameFile(@FormParam("id") int id, @FormParam("id") String name) {
+    public boolean renameFile(@FormParam("id") int id, @FormParam("name") String name) {
         return fileService.renameFile(id, name);
     }
-
 
     @POST
     @Path("/import/csv")
