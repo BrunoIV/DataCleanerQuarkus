@@ -14,8 +14,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 
 @QuarkusTest
 public class DataServiceTest {
@@ -23,6 +27,8 @@ public class DataServiceTest {
 	private static final String HEADER_NAME = "id";
 	private static final int COL_INDEX = 0;
 	private static final String NEW_VALUE = "new value";
+	private static final int ID_FILE = 0;
+	private static final List<Integer> COLUMNS = Arrays.asList(1, 0);
 
 	@Inject
 	private DataService dataService;
@@ -38,6 +44,30 @@ public class DataServiceTest {
 	@BeforeEach
 	public void setup() {
 		MockitoAnnotations.openMocks(this);
+	}
+
+	@Test
+	public void testNormalize() {
+		TableRest table = getExampleTable();
+
+		FileDb file = new FileDb();
+		file.setFileContent(dataService.table2csv(getExampleTable()));
+		Mockito.when(this.fileDao.getFileById(anyInt())).thenReturn(file);
+
+
+		Mockito.when(this.dataServiceSpy.getFileAsTable(ID_FILE)).thenReturn(table);
+
+		dataService.normalize("lowercase", COLUMNS, ID_FILE);
+		assertEquals(table.getValue(0, 0), "id_0");
+
+		dataService.normalize("trim", COLUMNS, ID_FILE);
+		assertEquals(table.getValue(0, 0), "id_0");
+
+		dataService.normalize("uppercase", COLUMNS, ID_FILE);
+		assertEquals(table.getValue(0, 0), "ID_0");
+
+		dataService.normalize("capitalize", COLUMNS, ID_FILE);
+		assertEquals(table.getValue(0, 0), "Id_0");
 	}
 
 
@@ -69,7 +99,113 @@ public class DataServiceTest {
 
 	@Test
 	public void testValidate() {
-		//TODO
+		TableRest table = getExampleTable();
+
+		FileDb file = new FileDb();
+		file.setFileContent(dataService.table2csv(getExampleTable()));
+		Mockito.when(this.fileDao.getFileById(anyInt())).thenReturn(file);
+
+
+		Mockito.when(this.dataServiceSpy.getFileAsTable(ID_FILE)).thenReturn(table);
+
+		GridRest grid = dataService.validate("validate_email", COLUMNS, ID_FILE);
+		assertFalse(grid.getValidationErrors().isEmpty());
+	}
+
+	@Test
+	public void testCsvToTable() {
+		String csv = "ID,Valor,Activo\n5,51,true\n6,52,true";
+
+		TableRest table = this.dataService.csv2table(csv);
+		assertEquals(table.getValues().size(), 2);
+		assertEquals(table.getHeader().size(), 3);
+	}
+
+	@Test
+	public void testTable2grid() {
+		TableRest table = getExampleTable();
+		GridRest grid = this.dataService.table2grid(table);
+		assertEquals(grid.getHeader().size() - 1, table.getHeader().size());
+		assertEquals(grid.getValues().size(), table.getValues().size());
+	}
+
+
+	@Test
+	public void testGetFileAsTable() {
+		FileDb file = new FileDb();
+		file.setFileContent(dataService.table2csv(getExampleTable()));
+		Mockito.when(this.fileDao.getFileById(anyInt())).thenReturn(file);
+
+		TableRest table = getExampleTable();
+		Mockito.when(this.dataServiceSpy.csv2table(anyString())).thenReturn(table);
+		TableRest table2 = this.dataService.getFileAsTable(ID_FILE);
+		assertEquals(table2, table);
+	}
+
+	@Test
+	public void testTable2Csv() {
+		TableRest table = getExampleTable();
+		String csv = this.dataService.table2csv(table);
+
+		String[] lines = csv.split("\n");
+		String[] cols = lines[0].split(",");
+
+		//Including header
+		assertEquals(lines.length, table.getValues().size() + 1);
+		assertEquals(cols.length, table.getHeader().size());
+	}
+
+	@Test
+	public void testGetData() {
+		TableRest table = getExampleTable();
+		int rows = table.getValues().size();
+
+		FileDb file = new FileDb();
+		file.setFileContent(dataService.table2csv(getExampleTable()));
+		Mockito.when(this.fileDao.getFileById(anyInt())).thenReturn(file);
+
+
+		Mockito.when(this.dataServiceSpy.getFileAsTable(anyInt())).thenReturn(table);
+		this.dataService.getData(ID_FILE);
+		assertNotNull(table);
+		assertEquals(rows, table.getValues().size());
+	}
+
+	@Test
+	public void testFillAutoIncremental() {
+		TableRest table = getExampleTable();
+		int rows = table.getValues().size();
+
+		FileDb file = new FileDb();
+		file.setFileContent(dataService.table2csv(getExampleTable()));
+		Mockito.when(this.fileDao.getFileById(anyInt())).thenReturn(file);
+
+
+		Mockito.when(this.dataServiceSpy.getFileAsTable(anyInt())).thenReturn(table);
+		this.dataService.fillAutoIncremental(COLUMNS, ID_FILE);
+		for (int i = 0; i < rows; i++) {
+			assertEquals("" + (i+1), table.getValues().get(i).get(COLUMNS.get(0)));
+		}
+	}
+
+
+	@Test
+	public void testFillFixedValue() {
+		GridRest grid = getExampleGrid();
+		int rows = grid.getValues().size();
+
+		TableRest table = getExampleTable();
+
+		FileDb file = new FileDb();
+		file.setFileContent(dataService.table2csv(getExampleTable()));
+		Mockito.when(this.fileDao.getFileById(anyInt())).thenReturn(file);
+
+
+		Mockito.when(this.dataServiceSpy.getFileAsTable(anyInt())).thenReturn(table);
+		this.dataService.fillFixedValue(NEW_VALUE, COLUMNS, ID_FILE);
+		for (int i = 0; i < rows; i++) {
+			assertEquals(NEW_VALUE, table.getValues().get(i).get(COLUMNS.get(0)));
+		}
 	}
 
 
