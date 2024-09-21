@@ -11,7 +11,6 @@ import java.util.*;
 public class GridRest {
 	private List<LinkedHashMap<String, Object>> values = new ArrayList<>();
 	private List<ColumnHeaderRest> header = new ArrayList<>();
-	private Map<Integer, String> validationErrors = new HashMap<>();
 
 	public GridRest() {
 		ColumnHeaderRest col = new ColumnHeaderRest("#", false,false);
@@ -36,9 +35,4 @@ public class GridRest {
 		}
 		this.values.get(row).put(key, value);
 	}
-
-	public void addValidationError(int line, String error) {
-		this.validationErrors.put(line, error + "\n" + Utils.notNullString(this.validationErrors.get(line)));
-	}
-
 }

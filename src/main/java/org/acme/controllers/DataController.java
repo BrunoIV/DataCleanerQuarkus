@@ -4,9 +4,12 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.acme.model.rest.GridRest;
+import org.acme.model.rest.ValidationRest;
 import org.acme.model.rest.ValueEditRest;
 import org.acme.service.DataService;
 import org.acme.util.Utils;
+
+import java.util.List;
 
 /**
  * Handles the retrieval, validation and modification of data
@@ -36,9 +39,9 @@ public class DataController {
     @POST
     @Path("/validate")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public GridRest validate(@FormParam("functionName") String functionName,
-                              @FormParam("columns") String columns,
-                              @FormParam("idFile") int idFile) {
+    public List<ValidationRest> validate(@FormParam("functionName") String functionName,
+                                         @FormParam("columns") String columns,
+                                         @FormParam("idFile") int idFile) {
         return dataService.validate(functionName, Utils.text2IntArray(columns), idFile);
     }
 

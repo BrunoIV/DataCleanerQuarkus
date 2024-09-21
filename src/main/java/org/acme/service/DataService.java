@@ -6,10 +6,7 @@ import jakarta.transaction.Transactional;
 import org.acme.dao.DataDao;
 import org.acme.dao.FileDao;
 import org.acme.db.FileDb;
-import org.acme.model.rest.ColumnHeaderRest;
-import org.acme.model.rest.GridRest;
-import org.acme.model.rest.TableRest;
-import org.acme.model.rest.ValueEditRest;
+import org.acme.model.rest.*;
 import org.acme.util.Utils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -18,6 +15,7 @@ import org.apache.commons.csv.QuoteMode;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
@@ -77,27 +75,26 @@ public class DataService {
 		return null;
 	}
 
-	public GridRest validate(String functionName,  List<Integer> columnList, int idFile) {
+	public List<ValidationRest> validate(String functionName, List<Integer> columnList, int idFile) {
 		TableRest table = this.getFileAsTable(idFile);
+		List<ValidationRest> validationErrors = new ArrayList<>();
 
 		if(table != null) {
-			GridRest grid = table2grid(table);
-
-
 			for (int i = 0; i < table.getValues().size(); i++){
 				for (int column : columnList) {
-
 					String error = checkValidValue(functionName, table.getValue(i, column));
 					if(error != null) {
-						grid.addValidationError(i, error);
+						ValidationRest err = new ValidationRest();
+						err.setLine(i);
+						err.setColumn(table.getHeader().get(column));
+						err.setError(error);
+						validationErrors.add(err);
 					}
 				}
 			}
-
-			return grid;
 		}
 
-		return null;
+		return validationErrors;
 	}
 
 	private String checkValidValue(String functionName, String value) {
