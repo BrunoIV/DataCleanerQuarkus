@@ -44,21 +44,6 @@ public class FileControllerTest {
 	}
 
 	@Test
-	public void testCreateFileEndpoint() {
-		Mockito.when(fileService.createFile(anyString())).thenReturn(true);
-
-		given()
-				.contentType(ContentType.URLENC)
-				.formParam("name", NAME)
-				.when()
-				.post("/file/createFile")
-				.then()
-				.statusCode(200)
-				.body(is("true"));
-	}
-
-
-	@Test
 	public void testDeleteFileEndpoint() {
 		Mockito.when(fileService.deleteFile(anyInt())).thenReturn(true);
 

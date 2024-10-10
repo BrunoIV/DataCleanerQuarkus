@@ -2,7 +2,6 @@ package org.acme.model.rest;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.acme.util.Utils;
 
 import java.util.*;
 
@@ -11,6 +10,8 @@ import java.util.*;
 public class GridRest {
 	private List<LinkedHashMap<String, Object>> values = new ArrayList<>();
 	private List<ColumnHeaderRest> header = new ArrayList<>();
+	private Boolean unsavedChanges = false;
+	private String fileType = "";
 
 	public GridRest() {
 		ColumnHeaderRest col = new ColumnHeaderRest("#", false,false);

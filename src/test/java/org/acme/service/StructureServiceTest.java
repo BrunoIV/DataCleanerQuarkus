@@ -2,7 +2,6 @@ package org.acme.service;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.mockito.InjectSpy;
 import jakarta.inject.Inject;
 import org.acme.model.rest.ColumnHeaderRest;
 import org.acme.model.rest.GridRest;
@@ -16,8 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.*;
 
 @QuarkusTest
 public class StructureServiceTest {
@@ -64,7 +62,7 @@ public class StructureServiceTest {
 
 		Mockito.when(dataService.getFileAsTable(anyInt())).thenReturn(table);
 		Mockito.when(dataService.table2grid(any(TableRest.class))).thenReturn(getExampleGrid());
-		Mockito.doNothing().when(fileService).putTable(anyInt(), any(TableRest.class));
+		Mockito.doNothing().when(fileService).addChangeHistory(anyInt(), any(TableRest.class), anyString());
 
 		//As the response of "addRow" is mocked I use "table" for know if the new row exists
 		GridRest grid = structureService.addRow(ROW_INDEX, ID_FILE);
@@ -79,7 +77,7 @@ public class StructureServiceTest {
 
 		Mockito.when(dataService.getFileAsTable(anyInt())).thenReturn(table);
 		Mockito.when(dataService.table2grid(any(TableRest.class))).thenReturn(getExampleGrid());
-		Mockito.doNothing().when(fileService).putTable(anyInt(), any(TableRest.class));
+		Mockito.doNothing().when(fileService).addChangeHistory(anyInt(), any(TableRest.class), anyString());
 
 		List<Integer> rowsToDelete = Arrays.asList(3,1,2);
 		GridRest grid = structureService.deleteRows(rowsToDelete, ID_FILE);
@@ -95,7 +93,7 @@ public class StructureServiceTest {
 
 		Mockito.when(dataService.getFileAsTable(anyInt())).thenReturn(table);
 		Mockito.when(dataService.table2grid(any(TableRest.class))).thenReturn(getExampleGrid());
-		Mockito.doNothing().when(fileService).putTable(anyInt(), any(TableRest.class));
+		Mockito.doNothing().when(fileService).addChangeHistory(anyInt(), any(TableRest.class), anyString());
 
 		List<Integer> colsToDelete = Arrays.asList(1,2);
 		GridRest grid = structureService.deleteColumns(colsToDelete, ID_FILE);

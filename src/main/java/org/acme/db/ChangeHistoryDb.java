@@ -14,12 +14,15 @@ public class ChangeHistoryDb {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "id")
 	@Id
-	private Long id;
+	private Integer id;
 
 	@Column(name = "id_file")
-	private Long ifFile;
+	private Integer idFile;
 
-	@Column(name = "file_content")
+	@Column(name = "description")
+	private String description;
+
+	@Column(name = "file_content", length = 2147483647)
 	private String fileContent;
 
 	@Column(name = "creationDate")

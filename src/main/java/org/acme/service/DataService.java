@@ -3,8 +3,10 @@ package org.acme.service;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.acme.dao.ChangeHistoryDao;
 import org.acme.dao.DataDao;
 import org.acme.dao.FileDao;
+import org.acme.db.ChangeHistoryDb;
 import org.acme.db.FileDb;
 import org.acme.model.rest.*;
 import org.acme.util.Utils;
@@ -28,6 +30,9 @@ public class DataService {
 
 	@Inject
 	FileDao fileDao;
+
+	@Inject
+	ChangeHistoryDao changeHistoryDao;
 
 	private static final String UPPERCASE = "uppercase";
 	private static final String LOWERCASE = "lowercase";
@@ -68,7 +73,7 @@ public class DataService {
 					}
 				}
 			}
-			fileService.putTable(idFile, table);
+			fileService.addChangeHistory(idFile, table, functionName);
 			return table2grid(table);
 		}
 
@@ -132,7 +137,7 @@ public class DataService {
 		if(table != null) {
 			table.getValues().get(value.getRowIndex()).set(value.getColIndex(), value.getValue());
 
-			fileService.putTable(value.getIdFile(), table);
+			fileService.addChangeHistory(value.getIdFile(), table, "Modify value");
 			return table2grid(table);
 		}
 
@@ -197,14 +202,51 @@ public class DataService {
 		return grid;
 	}
 
-	@Transactional
-	public TableRest getFileAsTable(int idFile) {
+	private boolean fileHasUnsavedChanges(int idFile) {
 		FileDb db = this.fileDao.getFileById(idFile);
 
 		if(db != null) {
-			return csv2table(db.getFileContent());
+			ChangeHistoryDb changes = changeHistoryDao.getLastChangeOfFile(idFile);
+			return (changes != null
+					&& changes.getCreationDate() != null
+					&& changes.getCreationDate().after(db.getCreationDate()));
 		}
 
+		return false;
+	}
+
+	public LastVersionFileRest getLastVersionFile(int idFile) {
+
+		//If the file is deleted it doesn't matter the history table
+		FileDb db = this.fileDao.getFileById(idFile);
+
+		if(db == null) {
+			return null;
+		}
+
+		LastVersionFileRest rs = new LastVersionFileRest();
+		rs.setId(idFile);
+
+		if(fileHasUnsavedChanges(idFile)) {
+			ChangeHistoryDb changes = changeHistoryDao.getLastChangeOfFile(idFile);
+			if(changes != null) {
+				rs.setFileContent(changes.getFileContent());
+				//rs.setFileType(changes.getType());
+			}
+		} else {
+			rs.setFileContent(db.getFileContent());
+			rs.setFileType(db.getType());
+		}
+
+		return rs;
+	}
+
+	@Transactional
+	public TableRest getFileAsTable(int idFile) {
+		LastVersionFileRest lastVersion = getLastVersionFile(idFile);
+		if(lastVersion != null) {
+			return csv2table(lastVersion.getFileContent());
+		}
 		return null;
 	}
 
@@ -242,14 +284,29 @@ public class DataService {
 
 	@Transactional
 	public GridRest getData(int idFile) {
-		FileDb db = this.fileDao.getFileById(idFile);
-
-		if(db != null) {
-			TableRest table = csv2table(db.getFileContent());
-			return table2grid(table);
+		LastVersionFileRest lastVersion = getLastVersionFile(idFile);
+		if(lastVersion == null) {
+			return null;
 		}
-		return null;
+
+		String csv = lastVersion.getFileContent();
+		TableRest table = csv2table(csv);
+		GridRest grid = table2grid(table);
+		grid.setUnsavedChanges(fileHasUnsavedChanges(idFile));
+		grid.setFileType(lastVersion.getFileType());
+		return grid;
 	}
+
+	@Transactional
+	public GridRest getDataHistory(int idHistory) {
+		String csv = changeHistoryDao.getFileContentById(idHistory);
+		TableRest table = csv2table(csv);
+		GridRest grid = table2grid(table);
+		grid.setUnsavedChanges(false);
+		return grid;
+	}
+
+
 
 	public GridRest fillAutoIncremental(List<Integer> columnList, int idFile) {
 		TableRest table = this.getFileAsTable(idFile);
@@ -262,7 +319,7 @@ public class DataService {
 				}
 			}
 
-			fileService.putTable(idFile, table);
+			fileService.addChangeHistory(idFile, table, "Fill auto-incremental");
 			return table2grid(table);
 		}
 
@@ -280,7 +337,7 @@ public class DataService {
 				}
 			}
 
-			fileService.putTable(idFile, table);
+			fileService.addChangeHistory(idFile, table, "Fill fixed value");
 			return table2grid(table);
 		}
 

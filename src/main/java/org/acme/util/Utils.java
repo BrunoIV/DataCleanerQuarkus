@@ -1,6 +1,8 @@
 package org.acme.util;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -90,5 +92,11 @@ public class Utils {
 		return str != null && str.matches("[a-zA-Z]+");
 	}
 	public static boolean isAlphanumeric(String str) {
-		return str != null && str.matches("[a-zA-Z0-9]+");	}
+		return str != null && str.matches("[a-zA-Z0-9]+");
+	}
+
+	public static String formatDate(Date d) {
+		SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		return format.format(d);
+	}
 }

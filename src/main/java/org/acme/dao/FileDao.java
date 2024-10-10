@@ -11,6 +11,7 @@ import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
 import org.acme.db.FileDb;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -41,7 +42,7 @@ public class FileDao {
 		TypedQuery<FileDb> typedQuery = entityManager.createQuery(query);
 
 		List<FileDb> result = typedQuery.getResultList();
-		if(result.size() > 0) {
+		if(!result.isEmpty()) {
 			return result.get(0);
 		}
 		return null;
@@ -49,10 +50,9 @@ public class FileDao {
 
 	@Transactional
 	public void deleteFile(FileDb db) {
-		if(db==null){
-			System.out.println("SNULLL");
+		if(db != null){
+			entityManager.remove(db);
 		}
-		entityManager.remove(db);
 	}
 
 	public void putFile(FileDb db) {
@@ -61,9 +61,10 @@ public class FileDao {
 
 
 	@Transactional
-	public void addFile(String name, String content) {
+	public void addFile(String name, String type, String content) {
 		FileDb filesDb = new FileDb();
 		filesDb.setName(name);
+		filesDb.setType(type);
 		filesDb.setFileContent(content);
 		filesDb.setFolder("/");
 		filesDb.setCreationDate(new Date());

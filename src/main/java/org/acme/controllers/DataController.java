@@ -26,6 +26,12 @@ public class DataController {
         return dataService.getData(idFile);
     }
 
+    @GET
+    @Path("/getData/history/{idHistory}")
+    public GridRest getDataHistory(@PathParam("idHistory") int idHistory) {
+        return dataService.getDataHistory(idHistory);
+    }
+
     @POST
     @Path("/normalize")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)

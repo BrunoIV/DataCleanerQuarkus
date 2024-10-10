@@ -3,6 +3,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.acme.model.rest.ChangesRest;
 import org.acme.model.rest.FileRest;
 import org.acme.model.rest.GridRest;
 import org.acme.service.FileService;
@@ -27,12 +28,20 @@ public class FileController {
         return fileService.getFiles();
     }
 
-    @POST
-    @Path("/createFile")
+    @GET
+    @Path("/getHistory/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public boolean createFile(@FormParam("name") String name) {
-        return fileService.createFile(name);
+    public List<ChangesRest> getHistory(@PathParam("id") int idFile) {
+        return fileService.getHistory(idFile);
+    }
+
+    @POST
+    @Path("/new")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public boolean newFile(@FormParam("type") String type, @FormParam("name") String name) {
+        return fileService.newFile(name, type);
     }
 
     @POST
@@ -66,6 +75,22 @@ public class FileController {
     @Produces(MediaType.APPLICATION_JSON)
     public GridRest importJson(MultipartFormDataInput input) {
         return fileService.importJson(input);
+    }
+
+    @POST
+    @Path("/save")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Boolean saveFile(@FormParam("id") int id) {
+        return fileService.saveFile(id);
+    }
+
+    @POST
+    @Path("/saveAs")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Boolean saveFileAs(@FormParam("id") int id, @FormParam("name") String name) {
+        return fileService.saveFileAs(id, name);
     }
 
     @GET

@@ -8,6 +8,7 @@ import org.acme.dao.FileDao;
 import org.acme.db.FileDb;
 import org.acme.model.rest.GridRest;
 import org.acme.model.rest.TableRest;
+import org.acme.model.rest.ValidationRest;
 import org.acme.model.rest.ValueEditRest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -108,8 +109,8 @@ public class DataServiceTest {
 
 		Mockito.when(this.dataServiceSpy.getFileAsTable(ID_FILE)).thenReturn(table);
 
-		GridRest grid = dataService.validate("validate_email", COLUMNS, ID_FILE);
-		assertFalse(grid.getValidationErrors().isEmpty());
+		List<ValidationRest> rest = dataService.validate("validate_email", COLUMNS, ID_FILE);
+		assertFalse(rest.isEmpty());
 	}
 
 	@Test

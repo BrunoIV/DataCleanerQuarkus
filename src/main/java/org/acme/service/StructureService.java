@@ -25,7 +25,7 @@ public class StructureService {
 				table.addValue(i, columnPosition, "");
 			}
 
-			fileService.putTable(idFile, table);
+			fileService.addChangeHistory(idFile, table, "Add column");
 			return dataService.table2grid(table);
 		}
 
@@ -41,7 +41,7 @@ public class StructureService {
 			List<String> list = new ArrayList<>(Collections.nCopies(table.getHeader().size(), ""));
 			table.getValues().add(position, list);
 
-			fileService.putTable(idFile, table);
+			fileService.addChangeHistory(idFile, table, "Add row");
 			return dataService.table2grid(table);
 		}
 		return null;
@@ -57,7 +57,7 @@ public class StructureService {
 				table.getValues().remove(index);
 			}
 
-			fileService.putTable(idFile, table);
+			fileService.addChangeHistory(idFile, table, "Delete row(s)");
 			return dataService.table2grid(table);
 		}
 
@@ -81,7 +81,7 @@ public class StructureService {
 				}
 			}
 
-			fileService.putTable(idFile, table);
+			fileService.addChangeHistory(idFile, table, "Delete column(s)");
 			return dataService.table2grid(table);
 		}
 
@@ -103,7 +103,7 @@ public class StructureService {
 
 				row.set(indexes.get(0), newValue.toString());
 			}
-			fileService.putTable(idFile, table);
+			fileService.addChangeHistory(idFile, table, "Join columns");
 			return dataService.table2grid(table);
 		}
 		return null;

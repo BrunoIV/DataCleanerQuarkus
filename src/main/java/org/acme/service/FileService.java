@@ -4,12 +4,12 @@ import com.google.gson.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.acme.dao.ChangeHistoryDao;
 import org.acme.dao.FileDao;
+import org.acme.db.ChangeHistoryDb;
 import org.acme.db.FileDb;
-import org.acme.model.rest.ColumnHeaderRest;
-import org.acme.model.rest.FileRest;
-import org.acme.model.rest.GridRest;
-import org.acme.model.rest.TableRest;
+import org.acme.model.rest.*;
+import org.acme.util.Utils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -24,6 +24,10 @@ import java.util.*;
 public class FileService {
 
 	@Inject FileDao fileDao;
+
+
+	@Inject
+	ChangeHistoryDao changeHistoryDao;
 
 	@Inject DataService dataService;
 
@@ -175,14 +179,15 @@ public class FileService {
 
 
 	@Transactional
-	public void putTable(int idFile, TableRest table) {
+	public void addChangeHistory(int idFile, TableRest table, String changeType) {
 		String csv = dataService.table2csv(table);
-		FileDb db = this.fileDao.getFileById(idFile);
 
-		if(db != null) {
-			db.setFileContent(csv);
-			fileDao.putFile(db);
-		}
+		ChangeHistoryDb changes = new ChangeHistoryDb();
+		changes.setIdFile(idFile);
+		changes.setDescription(changeType);
+		changes.setCreationDate(new Date());
+		changes.setFileContent(csv);
+		changeHistoryDao.addChangeHistory(changes);
 	}
 
 	@Transactional
@@ -193,6 +198,7 @@ public class FileService {
 			FileRest rs = new FileRest();
 			rs.setId(db.getId());
 			rs.setName(db.getName());
+			rs.setType(db.getType());
 			lst.add(rs);
 		}
 
@@ -221,16 +227,25 @@ public class FileService {
 	}
 
 	@Transactional
-	public boolean createFile(String name) {
-		fileDao.addFile(name, "");
-		return true;
+	public boolean newFile(String name, String type) {
+		Map<String, String> columns = Map.of(
+				"list", "Value",
+				"map", "Key,Value",
+				"table", "Column 1,Column 2,Column 3"
+		);
+		if(columns.get(type) != null) {
+			fileDao.addFile(name, type, columns.get(type) + "\n");
+			return true;
+		}
+
+		return false;
 	}
 
 	@Transactional
 	public GridRest importCsv(MultipartFormDataInput input) {
 		TableRest rs = multipartCsvToTable(input);
 		String name = getMultipartName(input);
-		fileDao.addFile(name, dataService.table2csv(rs));
+		fileDao.addFile(name, "grid", dataService.table2csv(rs));
 		return dataService.table2grid(rs);
 	}
 
@@ -238,7 +253,7 @@ public class FileService {
 	public GridRest importJson(MultipartFormDataInput input) {
 		TableRest rs = multipartJsonToTable(input);
 		String name = getMultipartName(input);
-		fileDao.addFile(name, dataService.table2csv(rs));
+		fileDao.addFile(name, "grid", dataService.table2csv(rs));
 		return dataService.table2grid(rs);
 	}
 
@@ -277,5 +292,51 @@ public class FileService {
 		}
 
 		return null;
+	}
+
+	@Transactional
+	public Boolean saveFile(int id) {
+		ChangeHistoryDb change = changeHistoryDao.getLastChangeOfFile(id);
+		FileDb file = fileDao.getFileById(id);
+
+		if(change != null && file != null) {
+			file.setFileContent(change.getFileContent());
+			file.setCreationDate(new Date());
+			fileDao.putFile(file);
+			return true;
+		}
+
+		return false;
+	}
+
+	@Transactional
+	public Boolean saveFileAs(int id, String newName) {
+		LastVersionFileRest lastVersion = dataService.getLastVersionFile(id);
+
+		if(lastVersion != null) {
+			fileDao.addFile(newName, "table", lastVersion.getFileContent());
+			return true;
+		}
+
+		return false;
+	}
+
+	public List<ChangesRest> getHistory(int idFile) {
+		List<ChangesRest> listChangesRest = new ArrayList<>();
+
+		List<ChangeHistoryDb> changesDb = changeHistoryDao.lstChanges(idFile);
+		if(changesDb != null) {
+			for (ChangeHistoryDb change: changesDb) {
+				ChangesRest rs = new ChangesRest();
+				rs.setIdFile(change.getIdFile());
+				rs.setId(change.getId());
+				rs.setDate(Utils.formatDate(change.getCreationDate()));
+				rs.setDescription(change.getDescription());
+				listChangesRest.add(rs);
+			}
+		}
+
+
+		return listChangesRest;
 	}
 }

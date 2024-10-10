@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import static io.restassured.RestAssured.given;
@@ -68,7 +69,7 @@ public class DataControllerTest {
 
 	@Test
 	public void testValidateEndpoint() {
-		Mockito.when(dataService.validate(anyString(), any(List.class), anyInt())).thenReturn(new GridRest());
+		Mockito.when(dataService.validate(anyString(), any(List.class), anyInt())).thenReturn(new ArrayList());
 
 		given()
 				.contentType(ContentType.URLENC)
