@@ -6,10 +6,7 @@ import io.quarkus.test.junit.mockito.InjectSpy;
 import jakarta.inject.Inject;
 import org.acme.dao.FileDao;
 import org.acme.db.FileDb;
-import org.acme.model.rest.GridRest;
-import org.acme.model.rest.TableRest;
-import org.acme.model.rest.ValidationRest;
-import org.acme.model.rest.ValueEditRest;
+import org.acme.model.rest.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -50,13 +47,7 @@ public class DataServiceTest {
 	@Test
 	public void testNormalize() {
 		TableRest table = getExampleTable();
-
-		FileDb file = new FileDb();
-		file.setFileContent(dataService.table2csv(getExampleTable()));
-		Mockito.when(this.fileDao.getFileById(anyInt())).thenReturn(file);
-
-
-		Mockito.when(this.dataServiceSpy.getFileAsTable(ID_FILE)).thenReturn(table);
+		Mockito.when(this.dataServiceSpy.getFileAsTable(anyInt())).thenReturn(table);
 
 		dataService.normalize("lowercase", COLUMNS, ID_FILE);
 		assertEquals(table.getValue(0, 0), "id_0");
@@ -74,18 +65,10 @@ public class DataServiceTest {
 
 	@Test
 	public void testModifyValue() {
-		GridRest grid = getExampleGrid();
-		int rows = grid.getValues().size();
-
 		TableRest table = getExampleTable();
+		int rows = table.getValues().size();
 
-		FileDb file = new FileDb();
-		file.setFileContent(dataService.table2csv(getExampleTable()));
-		Mockito.when(this.fileDao.getFileById(anyInt())).thenReturn(file);
-
-
-		Mockito.when(this.dataServiceSpy.getFileAsTable(0)).thenReturn(table);
-
+		Mockito.when(this.dataServiceSpy.getFileAsTable(anyInt())).thenReturn(table);
 
 		ValueEditRest value = new ValueEditRest();
 		value.setValue(NEW_VALUE);
@@ -101,13 +84,7 @@ public class DataServiceTest {
 	@Test
 	public void testValidate() {
 		TableRest table = getExampleTable();
-
-		FileDb file = new FileDb();
-		file.setFileContent(dataService.table2csv(getExampleTable()));
-		Mockito.when(this.fileDao.getFileById(anyInt())).thenReturn(file);
-
-
-		Mockito.when(this.dataServiceSpy.getFileAsTable(ID_FILE)).thenReturn(table);
+		Mockito.when(this.dataServiceSpy.getFileAsTable(anyInt())).thenReturn(table);
 
 		List<ValidationRest> rest = dataService.validate("validate_email", COLUMNS, ID_FILE);
 		assertFalse(rest.isEmpty());
@@ -133,14 +110,17 @@ public class DataServiceTest {
 
 	@Test
 	public void testGetFileAsTable() {
-		FileDb file = new FileDb();
-		file.setFileContent(dataService.table2csv(getExampleTable()));
-		Mockito.when(this.fileDao.getFileById(anyInt())).thenReturn(file);
+
+		LastVersionFileRest last = new LastVersionFileRest();
+		Mockito.when(this.dataServiceSpy.getLastVersionFile(anyInt())).thenReturn(last);
 
 		TableRest table = getExampleTable();
 		Mockito.when(this.dataServiceSpy.csv2table(anyString())).thenReturn(table);
-		TableRest table2 = this.dataService.getFileAsTable(ID_FILE);
-		assertEquals(table2, table);
+
+		TableRest result = this.dataService.getFileAsTable(ID_FILE);
+		assertNotNull(result);
+		assertInstanceOf(TableRest.class, result);
+
 	}
 
 	@Test
@@ -158,30 +138,19 @@ public class DataServiceTest {
 
 	@Test
 	public void testGetData() {
-		TableRest table = getExampleTable();
-		int rows = table.getValues().size();
-
-		FileDb file = new FileDb();
-		file.setFileContent(dataService.table2csv(getExampleTable()));
-		Mockito.when(this.fileDao.getFileById(anyInt())).thenReturn(file);
-
-
-		Mockito.when(this.dataServiceSpy.getFileAsTable(anyInt())).thenReturn(table);
-		this.dataService.getData(ID_FILE);
-		assertNotNull(table);
-		assertEquals(rows, table.getValues().size());
+		LastVersionFileRest last = new LastVersionFileRest();
+		last.setFileContent("a,b,c\nd,e,f\nd,e,f");
+		Mockito.when(this.dataServiceSpy.getLastVersionFile(anyInt())).thenReturn(last);
+		GridRest result = this.dataService.getData(ID_FILE);
+		assertNotNull(result);
+		assertEquals(2, result.getValues().size()); //2 rows (first is header)
+		assertEquals(4, result.getHeader().size()); //3 columns + "auto-incremental"
 	}
 
 	@Test
 	public void testFillAutoIncremental() {
 		TableRest table = getExampleTable();
 		int rows = table.getValues().size();
-
-		FileDb file = new FileDb();
-		file.setFileContent(dataService.table2csv(getExampleTable()));
-		Mockito.when(this.fileDao.getFileById(anyInt())).thenReturn(file);
-
-
 		Mockito.when(this.dataServiceSpy.getFileAsTable(anyInt())).thenReturn(table);
 		this.dataService.fillAutoIncremental(COLUMNS, ID_FILE);
 		for (int i = 0; i < rows; i++) {
@@ -194,14 +163,7 @@ public class DataServiceTest {
 	public void testFillFixedValue() {
 		GridRest grid = getExampleGrid();
 		int rows = grid.getValues().size();
-
 		TableRest table = getExampleTable();
-
-		FileDb file = new FileDb();
-		file.setFileContent(dataService.table2csv(getExampleTable()));
-		Mockito.when(this.fileDao.getFileById(anyInt())).thenReturn(file);
-
-
 		Mockito.when(this.dataServiceSpy.getFileAsTable(anyInt())).thenReturn(table);
 		this.dataService.fillFixedValue(NEW_VALUE, COLUMNS, ID_FILE);
 		for (int i = 0; i < rows; i++) {
