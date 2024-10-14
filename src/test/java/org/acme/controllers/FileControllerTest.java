@@ -3,6 +3,9 @@ package org.acme.controllers;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import org.acme.model.rest.FileRest;
 import org.acme.model.rest.GridRest;
 import org.acme.service.FileService;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
@@ -12,15 +15,17 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
+
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.*;
 
 @QuarkusTest
 public class FileControllerTest {
 	private static final int ID_FILE = 0;
 	private static final String NAME = "my file.csv";
+	private static final String TYPE = "table";
 
 	@InjectMock
 	private FileService fileService;
@@ -41,6 +46,70 @@ public class FileControllerTest {
 				.statusCode(200)
 				.body(notNullValue())
 				.contentType(ContentType.JSON);
+	}
+	@Test
+	public void testGetHistoryEndpoint() {
+		List<FileRest> files = new ArrayList<>();
+		files.add(new FileRest());
+		files.add(new FileRest());
+
+		Mockito.when(fileService.getFiles()).thenReturn(files);
+
+		given()
+				.pathParam("id", ID_FILE)
+				.when()
+				.get("/file/getHistory/{id}")
+				.then()
+				.statusCode(200)
+				.body(notNullValue())
+				.body(hasLength(files.size()))
+				.contentType(ContentType.JSON);
+	}
+
+
+	@Test
+	public void testNewFileEndpoint() {
+		Mockito.when(fileService.newFile(anyString(), anyString())).thenReturn(true);
+
+		given()
+				.contentType(ContentType.URLENC)
+				.formParam("type", TYPE)
+				.formParam("name", NAME)
+				.when()
+				.post("/file/new")
+				.then()
+				.statusCode(200)
+				.body(is("true"));
+	}
+
+	@Test
+	public void testSaveFileEndpoint() {
+		Mockito.when(fileService.saveFile(anyInt())).thenReturn(true);
+
+		given()
+				.contentType(ContentType.URLENC)
+				.formParam("id", ID_FILE)
+				.when()
+				.post("/file/save")
+				.then()
+				.statusCode(200)
+				.body(is("true"));
+	}
+
+
+	@Test
+	public void testSaveAsFileEndpoint() {
+		Mockito.when(fileService.saveFileAs(anyInt(), anyString())).thenReturn(false);
+
+		given()
+				.contentType(ContentType.URLENC)
+				.formParam("id", ID_FILE)
+				.formParam("name", NAME)
+				.when()
+				.post("/file/saveAs")
+				.then()
+				.statusCode(200)
+				.body(is("false"));
 	}
 
 	@Test
@@ -74,7 +143,7 @@ public class FileControllerTest {
 
 	@Test
 	public void testImportCsvEndpoint() {
-		Mockito.when(fileService.importCsv(any(MultipartFormDataInput.class))).thenReturn(new GridRest());
+		Mockito.when(fileService.importCsv(Mockito.any(org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput.class))).thenReturn(new GridRest());
 
 		File testFile = new File("src/test/resources/test.csv");
 
@@ -90,7 +159,7 @@ public class FileControllerTest {
 
 	@Test
 	public void testImportJsonEndpoint() {
-		Mockito.when(fileService.importJson(any(MultipartFormDataInput.class))).thenReturn(new GridRest());
+		Mockito.when(fileService.importJson(Mockito.any(org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput.class))).thenReturn(new GridRest());
 
 		File testFile = new File("src/test/resources/test.json");
 
