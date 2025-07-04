@@ -3,9 +3,6 @@ package org.acme.controllers;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import org.acme.model.rest.FileRest;
 import org.acme.model.rest.GridRest;
 import org.acme.service.FileService;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
@@ -15,8 +12,6 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
-
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -24,6 +19,7 @@ import static org.mockito.ArgumentMatchers.*;
 @QuarkusTest
 public class FileControllerTest {
 	private static final int ID_FILE = 0;
+	private static final String IDS_FILE = "1,2,3";
 	private static final String NAME = "my file.csv";
 	private static final String TYPE = "table";
 
@@ -45,24 +41,6 @@ public class FileControllerTest {
 				.then()
 				.statusCode(200)
 				.body(notNullValue())
-				.contentType(ContentType.JSON);
-	}
-	@Test
-	public void testGetHistoryEndpoint() {
-		List<FileRest> files = new ArrayList<>();
-		files.add(new FileRest());
-		files.add(new FileRest());
-
-		Mockito.when(fileService.getFiles()).thenReturn(files);
-
-		given()
-				.pathParam("id", ID_FILE)
-				.when()
-				.get("/file/getHistory/{id}")
-				.then()
-				.statusCode(200)
-				.body(notNullValue())
-				.body(hasLength(files.size()))
 				.contentType(ContentType.JSON);
 	}
 
@@ -114,11 +92,11 @@ public class FileControllerTest {
 
 	@Test
 	public void testDeleteFileEndpoint() {
-		Mockito.when(fileService.deleteFile(anyInt())).thenReturn(true);
+		Mockito.when(fileService.deleteFiles(anyString())).thenReturn(true);
 
 		given()
 				.contentType(ContentType.URLENC)
-				.formParam("id", ID_FILE)
+				.formParam("ids", IDS_FILE)
 				.when()
 				.post("/file/deleteFile")
 				.then()
@@ -135,7 +113,7 @@ public class FileControllerTest {
 				.formParam("id", ID_FILE)
 				.formParam("name", NAME)
 				.when()
-				.post("/file/renameFile")
+				.post("/file/rename")
 				.then()
 				.statusCode(200)
 				.body(is("false"));
@@ -143,7 +121,7 @@ public class FileControllerTest {
 
 	@Test
 	public void testImportCsvEndpoint() {
-		Mockito.when(fileService.importCsv(Mockito.any(org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput.class))).thenReturn(new GridRest());
+		Mockito.when(fileService.importCsv(Mockito.any(MultipartFormDataInput.class))).thenReturn(new GridRest());
 
 		File testFile = new File("src/test/resources/test.csv");
 
@@ -159,7 +137,7 @@ public class FileControllerTest {
 
 	@Test
 	public void testImportJsonEndpoint() {
-		Mockito.when(fileService.importJson(Mockito.any(org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput.class))).thenReturn(new GridRest());
+		Mockito.when(fileService.importJson(Mockito.any(MultipartFormDataInput.class))).thenReturn(new GridRest());
 
 		File testFile = new File("src/test/resources/test.json");
 

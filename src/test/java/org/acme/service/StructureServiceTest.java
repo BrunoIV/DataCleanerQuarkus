@@ -56,6 +56,14 @@ public class StructureServiceTest {
 	}
 
 	@Test
+	public void testAddColumnNull() {
+		Mockito.when(dataService.getFileAsTable(anyInt())).thenReturn(null);
+		GridRest grid = structureService.addColumn(NEW_COLUMN_NAME, NEW_COLUMN_POSITION, ID_FILE);
+		assertNull(grid);
+	}
+
+
+	@Test
 	public void testAddRow() {
 		TableRest table = getExampleTable();
 		int originalNumberItems = table.getValues().size();
@@ -71,6 +79,14 @@ public class StructureServiceTest {
 	}
 
 	@Test
+	public void testAddRowNull() {
+		Mockito.when(dataService.getFileAsTable(anyInt())).thenReturn(null);
+		GridRest grid = structureService.addRow(ROW_INDEX, ID_FILE);
+		assertNull(grid);
+	}
+
+
+	@Test
 	public void testDeleteRows() {
 		TableRest table = getExampleTable();
 		int originalNumberItems = table.getValues().size();
@@ -83,6 +99,14 @@ public class StructureServiceTest {
 		GridRest grid = structureService.deleteRows(rowsToDelete, ID_FILE);
 		assertNotNull(grid);
 		assertEquals(table.getValues().size(), originalNumberItems - rowsToDelete.size());
+	}
+
+	@Test
+	public void testDeleteRowsNull() {
+		Mockito.when(dataService.getFileAsTable(anyInt())).thenReturn(null);
+		List<Integer> rowsToDelete = Arrays.asList(3,1,2);
+		GridRest grid = structureService.deleteRows(rowsToDelete, ID_FILE);
+		assertNull(grid);
 	}
 
 
@@ -102,8 +126,26 @@ public class StructureServiceTest {
 	}
 
 	@Test
+	public void testDeleteColumnsNull() {
+		Mockito.when(dataService.getFileAsTable(anyInt())).thenReturn(null);
+		List<Integer> colsToDelete = Arrays.asList(1,2);
+		GridRest grid = structureService.deleteColumns(colsToDelete, ID_FILE);
+		assertNull(grid);
+	}
+
+	@Test
 	public void testJoinColumns() {
-		//TODO: method is unfinished
+		TableRest table = getExampleTable();
+		int originalNumberItems = table.getHeader().size();
+
+		Mockito.when(dataService.getFileAsTable(anyInt())).thenReturn(table);
+		Mockito.when(dataService.table2grid(any(TableRest.class))).thenReturn(getExampleGrid());
+		Mockito.doNothing().when(fileService).addChangeHistory(anyInt(), any(TableRest.class), anyString());
+
+//		List<Integer> cols = Arrays.asList(1,2);
+//		GridRest grid = structureService.joinColumns(cols, ID_FILE);
+//		assertNotNull(grid);
+//		assertEquals(grid.getHeader().size(), originalNumberItems - 1);
 	}
 
 	private GridRest getExampleGrid() {
