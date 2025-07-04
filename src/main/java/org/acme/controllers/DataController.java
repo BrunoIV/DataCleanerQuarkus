@@ -3,6 +3,7 @@ package org.acme.controllers;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import org.acme.model.rest.ChangesRest;
 import org.acme.model.rest.GridRest;
 import org.acme.model.rest.ValidationRest;
 import org.acme.model.rest.ValueEditRest;
@@ -30,6 +31,12 @@ public class DataController {
     @Path("/getData/history/{idHistory}")
     public GridRest getDataHistory(@PathParam("idHistory") int idHistory) {
         return dataService.getDataHistory(idHistory);
+    }
+
+    @GET
+    @Path("/getHistory/{id}")
+    public List<ChangesRest> getHistory(@PathParam("id") int idFile) {
+        return dataService.getHistory(idFile);
     }
 
     @POST
@@ -72,8 +79,30 @@ public class DataController {
     @Path("/fillFixedValue")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public GridRest fillFixedValue(@FormParam("newValue") String newValue,
-                                        @FormParam("columns") String columns,
-                                        @FormParam("idFile") int idFile) {
+                                   @FormParam("columns") String columns,
+                                   @FormParam("idFile") int idFile) {
         return dataService.fillFixedValue(newValue, Utils.text2IntArray(columns), idFile);
+    }
+
+
+    @POST
+    @Path("/zscore")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public GridRest zscore(@FormParam("min") int min,
+                           @FormParam("max") int max,
+                           @FormParam("delete") boolean delete,
+                                   @FormParam("columns") String columns,
+                                   @FormParam("idFile") int idFile) {
+        return dataService.zscore(min, max, delete, Utils.text2IntArray(columns), idFile);
+    }
+
+    @POST
+    @Path("/percentile")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public GridRest percentile(@FormParam("value") int value,
+                           @FormParam("delete") boolean delete,
+                           @FormParam("columns") String columns,
+                           @FormParam("idFile") int idFile) {
+        return dataService.percentile(value, delete, Utils.text2IntArray(columns), idFile);
     }
 }

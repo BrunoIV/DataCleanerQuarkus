@@ -28,13 +28,6 @@ public class FileController {
         return fileService.getFiles();
     }
 
-    @GET
-    @Path("/getHistory/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public List<ChangesRest> getHistory(@PathParam("id") int idFile) {
-        return fileService.getHistory(idFile);
-    }
 
     @POST
     @Path("/new")
@@ -48,12 +41,12 @@ public class FileController {
     @Path("/deleteFile")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public boolean deleteFile(@FormParam("id") int id) {
-        return fileService.deleteFile(id);
+    public boolean deleteFile(@FormParam("ids") String ids) {
+        return fileService.deleteFiles(ids);
     }
 
     @POST
-    @Path("/renameFile")
+    @Path("/rename")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public boolean renameFile(@FormParam("id") int id, @FormParam("name") String name) {
@@ -129,4 +122,12 @@ public class FileController {
 
     }
 
+
+    @POST
+    @Path("/clone")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Boolean clone(@FormParam("ids") String ids) {
+        return fileService.clone(ids);
+    }
 }

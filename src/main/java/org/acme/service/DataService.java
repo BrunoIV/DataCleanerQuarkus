@@ -4,7 +4,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.acme.dao.ChangeHistoryDao;
-import org.acme.dao.DataDao;
 import org.acme.dao.FileDao;
 import org.acme.db.ChangeHistoryDb;
 import org.acme.db.FileDb;
@@ -14,19 +13,14 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.csv.QuoteMode;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @ApplicationScoped
 public class DataService {
 	@Inject
 	FileService fileService;
-
-	@Inject
-	DataDao dataDao;
 
 	@Inject
 	FileDao fileDao;
@@ -87,12 +81,13 @@ public class DataService {
 		if(table != null) {
 			for (int i = 0; i < table.getValues().size(); i++){
 				for (int column : columnList) {
-					String error = checkValidValue(functionName, table.getValue(i, column));
+					String value = table.getValue(i, column);
+					String error = checkValidValue(functionName, value);
 					if(error != null) {
 						ValidationRest err = new ValidationRest();
 						err.setLine(i);
 						err.setColumn(table.getHeader().get(column));
-						err.setError(error);
+						err.setError(error + " \"" + value + "\"");
 						validationErrors.add(err);
 					}
 				}
@@ -136,8 +131,16 @@ public class DataService {
 
 		if(table != null) {
 			table.getValues().get(value.getRowIndex()).set(value.getColIndex(), value.getValue());
+			String headerName = table.getHeader().get(value.getColIndex());
 
-			fileService.addChangeHistory(value.getIdFile(), table, "Modify value");
+			fileService.addChangeHistory(value.getIdFile(), table,
+					String.format(
+							"Modified the value of column \"%s\" in row %d to \"%s\".",
+							headerName,
+							value.getRowIndex() + 1,
+							value.getValue()
+					)
+			);
 			return table2grid(table);
 		}
 
@@ -202,7 +205,7 @@ public class DataService {
 		return grid;
 	}
 
-	private boolean fileHasUnsavedChanges(int idFile) {
+	public boolean fileHasUnsavedChanges(int idFile) {
 		FileDb db = this.fileDao.getFileById(idFile);
 
 		if(db != null) {
@@ -342,5 +345,97 @@ public class DataService {
 		}
 
 		return null;
+	}
+
+	public GridRest zscore(int min, int max, boolean delete, List<Integer> columnList, int idFile) {
+		TableRest table = this.getFileAsTable(idFile);
+
+		if(table != null) {
+
+			for (int i = table.getValues().size() - 1; i >= 0; i--) {
+				for (int column : columnList) {
+					Integer value = Integer.parseInt(table.getValues().get(i).get(column));
+
+					if (delete && (value > max || value < min)) {
+						table.getValues().remove(i);
+					} else if(!delete && value > max) {
+						table.getValues().get(i).set(column, String.valueOf(max));
+					} else if(!delete && value < min) {
+						table.getValues().get(i).set(column, String.valueOf(min));
+					}
+				}
+			}
+
+			ChangeHistoryDb db = new ChangeHistoryDb();
+			db.setIdFile(idFile);
+			db.setDescription("Z-Score");
+			db.setFileContent(table2csv(table));
+			db.setCreationDate(new Date());
+			changeHistoryDao.addChangeHistory(db);
+		}
+		return table2grid(table);
+	}
+
+	public GridRest percentile(int value, boolean delete, List<Integer> columnList, int idFile) {
+		TableRest table = this.getFileAsTable(idFile);
+
+		if(table != null) {
+			Map<Integer, Double> values = new HashMap<>();
+
+			//Average value for each column
+			for (int column : columnList) {
+				double avg = 0.0;
+
+				for (int i = table.getValues().size() - 1; i >= 0; i--) {
+					Integer val = Integer.parseInt(table.getValues().get(i).get(column));
+					avg+=val;
+				}
+
+				values.put(column, avg / table.getValues().size());
+			}
+
+
+			for (int column : columnList) {
+				double avg = 0.0;
+
+				for (int i = table.getValues().size() - 1; i >= 0; i--) {
+					if(values.get(column) <= value) {
+
+					}
+				}
+
+				values.put(column, avg / table.getValues().size());
+			}
+
+
+
+			ChangeHistoryDb db = new ChangeHistoryDb();
+			db.setIdFile(idFile);
+			db.setDescription("Percentile");
+			db.setFileContent(table2csv(table));
+			db.setCreationDate(new Date());
+			changeHistoryDao.addChangeHistory(db);
+		}
+		return table2grid(table);
+	}
+
+
+	public List<ChangesRest> getHistory(int idFile) {
+		List<ChangesRest> listChangesRest = new ArrayList<>();
+
+		List<ChangeHistoryDb> changesDb = changeHistoryDao.lstChanges(idFile);
+		if(changesDb != null) {
+			for (ChangeHistoryDb change: changesDb) {
+				ChangesRest rs = new ChangesRest();
+				rs.setIdFile(change.getIdFile());
+				rs.setId(change.getId());
+				rs.setDate(Utils.formatDate(change.getCreationDate()));
+				rs.setDescription(change.getDescription());
+				listChangesRest.add(rs);
+			}
+		}
+
+
+		return listChangesRest;
 	}
 }

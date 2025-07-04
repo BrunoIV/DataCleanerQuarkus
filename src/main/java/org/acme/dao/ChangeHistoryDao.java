@@ -6,8 +6,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import jakarta.transaction.Transactional;
-import org.acme.db.ChangeHistoryDb;
-import org.acme.db.FileDb;
+import org.acme.db.*;
 
 import java.util.List;
 
@@ -70,5 +69,16 @@ public class ChangeHistoryDao {
 
 		TypedQuery<ChangeHistoryDb> typedQuery = entityManager.createQuery(query);
 		return typedQuery.getResultList();
+	}
+
+	public void deleteHistoryOfFile(int id) {
+		List<ChangeHistoryDb> dbs = lstChanges(id);
+		if(dbs != null) {
+			for (ChangeHistoryDb db: dbs) {
+				if(db != null){
+					entityManager.remove(db);
+				}
+			}
+		}
 	}
 }

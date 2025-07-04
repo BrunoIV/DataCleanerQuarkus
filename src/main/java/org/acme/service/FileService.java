@@ -9,15 +9,9 @@ import org.acme.dao.FileDao;
 import org.acme.db.ChangeHistoryDb;
 import org.acme.db.FileDb;
 import org.acme.model.rest.*;
-import org.acme.util.Utils;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.csv.QuoteMode;
+import org.acme.util.*;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
-
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @ApplicationScoped
@@ -25,12 +19,10 @@ public class FileService {
 
 	@Inject FileDao fileDao;
 
-
 	@Inject
 	ChangeHistoryDao changeHistoryDao;
 
 	@Inject DataService dataService;
-
 
 	public String multipartToString(MultipartFormDataInput input){
 		StringBuilder stringBuilder = new StringBuilder();
@@ -59,47 +51,6 @@ public class FileService {
 		return dataService.csv2table(csv);
 	}
 
-
-	@Deprecated
-	public GridRest csv2grid(String csv) {
-		GridRest rs = new GridRest();
-
-		if(csv == null) {
-			return rs;
-		}
-
-		InputStream inputStream = new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
-		Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-
-		CSVParser parser = null;
-		try {
-
-			CSVFormat csvFormat = CSVFormat.Builder.create()
-					.setIgnoreEmptyLines(true)
-					.setEscape('\\')
-					.setQuoteMode(QuoteMode.NONE)
-					.build();
-
-			parser = new CSVParser(reader, csvFormat);
-			List<CSVRecord> list = parser.getRecords();
-			for (int line = 0; line < list.size(); line++) {
-				for (int j = 0; j < list.get(line).size(); j++) {
-					if (line == 0) {
-						rs.addHeader(new ColumnHeaderRest(list.get(line).get(j), true, j == 0));
-					} else {
-						//fix first line for "values" is 0
-						String id = list.get(0).get(j);
-						rs.addValue(line - 1, id, list.get(line).get(j));
-					}
-				}
-			}
-		} catch (IOException e) {
-			return null;
-		}
-		return rs;
-	}
-
-
 	public TableRest multipartJsonToTable(MultipartFormDataInput input) {
 		TableRest rs = new TableRest();
 		String json = multipartToString(input);
@@ -107,7 +58,7 @@ public class FileService {
 		return rs;
 	}
 
-	private void processJson(JsonElement jsonElement, TableRest rs) {
+	public void processJson(JsonElement jsonElement, TableRest rs) {
 		if (jsonElement.isJsonArray()) {
 			JsonArray jsonArray = jsonElement.getAsJsonArray();
 
@@ -199,6 +150,7 @@ public class FileService {
 			rs.setId(db.getId());
 			rs.setName(db.getName());
 			rs.setType(db.getType());
+			rs.setUnsavedChanges(dataService.fileHasUnsavedChanges(db.getId()));
 			lst.add(rs);
 		}
 
@@ -217,13 +169,19 @@ public class FileService {
 	}
 
 	@Transactional
-	public boolean deleteFile(int id) {
-		FileDb db = fileDao.getFileById(id);
-		if(db != null) {
-			fileDao.deleteFile(db);
-			return true;
+	public boolean deleteFiles(String ids) {
+		boolean allFound = true;
+		for (int id: Utils.text2IntArray(ids)) {
+			FileDb db = fileDao.getFileById(id);
+			changeHistoryDao.deleteHistoryOfFile(id);
+
+			if(db != null) {
+				fileDao.deleteFile(db);
+			} else {
+				allFound = false;
+			}
 		}
-		return false;
+		return allFound;
 	}
 
 	@Transactional
@@ -233,7 +191,7 @@ public class FileService {
 				"map", "Key,Value",
 				"table", "Column 1,Column 2,Column 3"
 		);
-		if(columns.get(type) != null) {
+		if(type != null && columns.get(type) != null) {
 			fileDao.addFile(name, type, columns.get(type) + "\n");
 			return true;
 		}
@@ -321,22 +279,18 @@ public class FileService {
 		return false;
 	}
 
-	public List<ChangesRest> getHistory(int idFile) {
-		List<ChangesRest> listChangesRest = new ArrayList<>();
-
-		List<ChangeHistoryDb> changesDb = changeHistoryDao.lstChanges(idFile);
-		if(changesDb != null) {
-			for (ChangeHistoryDb change: changesDb) {
-				ChangesRest rs = new ChangesRest();
-				rs.setIdFile(change.getIdFile());
-				rs.setId(change.getId());
-				rs.setDate(Utils.formatDate(change.getCreationDate()));
-				rs.setDescription(change.getDescription());
-				listChangesRest.add(rs);
+	public Boolean clone(String ids) {
+		boolean result = true;
+		for (int id: Utils.text2IntArray(ids)) {
+			FileDb db = fileDao.getFileById(id);
+			if(db != null) {
+				fileDao.addFile("Copy of " + db.getName(), db.getType(), db.getFileContent());
+			} else {
+				result = false;
 			}
 		}
 
-
-		return listChangesRest;
+		return result;
 	}
+
 }
