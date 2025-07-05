@@ -138,18 +138,17 @@ public class DataControllerTest {
 
 
 	@Test
-	public void testZscoreEndpoint() {
-		Mockito.when(dataService.zscore(anyInt(), anyInt(), anyBoolean(), any(), anyInt())).thenReturn(new GridRest());
+	public void testSearchNumberEndpoint() {
+		Mockito.when(dataService.searchNumber(anyInt(), anyInt(), any(), anyInt())).thenReturn(new GridRest());
 
 		given()
 				.contentType(ContentType.URLENC)
 				.formParam("min", MIN_VALUE)
 				.formParam("max", MAX_VALUE)
-				.formParam("delete", DELETE)
 				.formParam("columns", StringUtils.join(COLUMNS, ","))
 				.formParam("idFile", ID_FILE)
 				.when()
-				.post("/data/zscore")
+				.post("/data/searchNumber")
 				.then()
 				.statusCode(200)
 				.body(notNullValue());

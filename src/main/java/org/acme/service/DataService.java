@@ -347,7 +347,15 @@ public class DataService {
 		return null;
 	}
 
-	public GridRest zscore(int min, int max, boolean delete, List<Integer> columnList, int idFile) {
+	/**
+	 * Search the selected columns for rows with a number between min and max
+	 * @param min
+	 * @param max
+	 * @param columnList
+	 * @param idFile
+	 * @return
+	 */
+	public GridRest searchNumber(Integer min, Integer max, List<Integer> columnList, int idFile) {
 		TableRest table = this.getFileAsTable(idFile);
 
 		if(table != null) {
@@ -356,24 +364,37 @@ public class DataService {
 				for (int column : columnList) {
 					Integer value = Integer.parseInt(table.getValues().get(i).get(column));
 
-					if (delete && (value > max || value < min)) {
+					if((max != null && value > max) || (min != null && value < min)) {
 						table.getValues().remove(i);
-					} else if(!delete && value > max) {
-						table.getValues().get(i).set(column, String.valueOf(max));
-					} else if(!delete && value < min) {
-						table.getValues().get(i).set(column, String.valueOf(min));
 					}
 				}
 			}
 
 			ChangeHistoryDb db = new ChangeHistoryDb();
 			db.setIdFile(idFile);
-			db.setDescription("Z-Score");
+
+			db.setDescription("Search number " + getDescriptionSearchNumber(min, max));
 			db.setFileContent(table2csv(table));
 			db.setCreationDate(new Date());
 			changeHistoryDao.addChangeHistory(db);
 		}
 		return table2grid(table);
+	}
+
+	/**
+	 * Generates the description of the searchNumber function for the "history log"
+	 * @param min
+	 * @param max
+	 * @return
+	 */
+	private String getDescriptionSearchNumber(Integer min, Integer max) {
+		if(min != null && max != null) {
+			return "between " + min + " and " + max;
+		} else if(min != null) {
+			return "> " + min;
+		} else {
+			return "< " + max;
+		}
 	}
 
 	public GridRest percentile(int value, boolean delete, List<Integer> columnList, int idFile) {

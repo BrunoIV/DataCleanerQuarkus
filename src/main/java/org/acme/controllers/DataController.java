@@ -86,14 +86,13 @@ public class DataController {
 
 
     @POST
-    @Path("/zscore")
+    @Path("/searchNumber")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public GridRest zscore(@FormParam("min") int min,
+    public GridRest searchNumber(@FormParam("min") int min,
                            @FormParam("max") int max,
-                           @FormParam("delete") boolean delete,
                                    @FormParam("columns") String columns,
                                    @FormParam("idFile") int idFile) {
-        return dataService.zscore(min, max, delete, Utils.text2IntArray(columns), idFile);
+        return dataService.searchNumber(min, max, Utils.text2IntArray(columns), idFile);
     }
 
     @POST
