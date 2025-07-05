@@ -96,12 +96,12 @@ public class DataController {
     }
 
     @POST
-    @Path("/percentile")
+    @Path("/searchText")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public GridRest percentile(@FormParam("value") int value,
-                           @FormParam("delete") boolean delete,
+    public GridRest searchText(@FormParam("value") String value,
+                           @FormParam("typeSearch") int typeSearch,
                            @FormParam("columns") String columns,
                            @FormParam("idFile") int idFile) {
-        return dataService.percentile(value, delete, Utils.text2IntArray(columns), idFile);
+        return dataService.searchText(value, typeSearch, Utils.text2IntArray(columns), idFile);
     }
 }

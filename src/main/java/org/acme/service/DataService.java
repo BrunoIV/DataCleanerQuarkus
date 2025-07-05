@@ -19,6 +19,9 @@ import java.util.*;
 
 @ApplicationScoped
 public class DataService {
+	private static final int TYPE_SEARCH_ALL = 0;
+	private static final int TYPE_SEARCH_START = 1;
+	private static final int TYPE_SEARCH_END = 2;
 	@Inject
 	FileService fileService;
 
@@ -329,6 +332,13 @@ public class DataService {
 		return null;
 	}
 
+	/**
+	 * Fill the selected columns with a fixed value
+	 * @param newValue
+	 * @param columnList
+	 * @param idFile
+	 * @return
+	 */
 	public GridRest fillFixedValue(String newValue, List<Integer> columnList, int idFile) {
 		TableRest table = this.getFileAsTable(idFile);
 
@@ -340,7 +350,7 @@ public class DataService {
 				}
 			}
 
-			fileService.addChangeHistory(idFile, table, "Fill fixed value");
+			fileService.addChangeHistory(idFile, table, "Fill fixed value " + newValue);
 			return table2grid(table);
 		}
 
@@ -397,42 +407,34 @@ public class DataService {
 		}
 	}
 
-	public GridRest percentile(int value, boolean delete, List<Integer> columnList, int idFile) {
+	/**
+	 * Search within the selected columns for rows containing the specified text
+	 * @param search
+	 * @param typeSearch - 0 = any position | 1 = starts with | 2 = ends with
+	 * @param columnList
+	 * @param idFile
+	 * @return
+	 */
+	public GridRest searchText(String search, int typeSearch, List<Integer> columnList, int idFile) {
 		TableRest table = this.getFileAsTable(idFile);
 
 		if(table != null) {
-			Map<Integer, Double> values = new HashMap<>();
+			for (int i = table.getValues().size() - 1; i >= 0; i--) {
+				for (int column : columnList) {
+					String value = table.getValues().get(i).get(column);
 
-			//Average value for each column
-			for (int column : columnList) {
-				double avg = 0.0;
-
-				for (int i = table.getValues().size() - 1; i >= 0; i--) {
-					Integer val = Integer.parseInt(table.getValues().get(i).get(column));
-					avg+=val;
-				}
-
-				values.put(column, avg / table.getValues().size());
-			}
-
-
-			for (int column : columnList) {
-				double avg = 0.0;
-
-				for (int i = table.getValues().size() - 1; i >= 0; i--) {
-					if(values.get(column) <= value) {
-
+					if((typeSearch == TYPE_SEARCH_ALL && !value.contains(search)) ||
+							(typeSearch == TYPE_SEARCH_START && !value.startsWith(search)) ||
+							(typeSearch == TYPE_SEARCH_END && !value.endsWith(search))
+					) {
+						table.getValues().remove(i);
 					}
 				}
-
-				values.put(column, avg / table.getValues().size());
 			}
-
-
 
 			ChangeHistoryDb db = new ChangeHistoryDb();
 			db.setIdFile(idFile);
-			db.setDescription("Percentile");
+			db.setDescription("Search Text " + search);
 			db.setFileContent(table2csv(table));
 			db.setCreationDate(new Date());
 			changeHistoryDao.addChangeHistory(db);

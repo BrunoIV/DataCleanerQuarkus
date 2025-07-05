@@ -194,4 +194,19 @@ public class FileControllerTest {
 				.statusCode(200)
 				.body(is(expected));
 	}
+
+
+	@Test
+	public void testCloneEndpoint() {
+		Mockito.when(fileService.clone(anyString())).thenReturn(true);
+
+		given()
+				.contentType(ContentType.URLENC)
+				.formParam("ids", IDS_FILE)
+				.when()
+				.post("/file/clone")
+				.then()
+				.statusCode(200)
+				.body(is("true"));
+	}
 }

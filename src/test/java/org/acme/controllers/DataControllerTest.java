@@ -28,7 +28,8 @@ public class DataControllerTest {
 	private static final boolean DELETE = false;
 	private static final String NEW_VALUE = "new value";
 	private static final String FN_NAME = "function";
-
+	private static final String SEARCH = "my search";
+	private static final Object TYPE_SEARCH_ALL = 0;
 
 
 	private static final List<Integer> COLUMNS = Arrays.asList(1,2,3);
@@ -155,17 +156,17 @@ public class DataControllerTest {
 	}
 
 	@Test
-	public void testPercentileEndpoint() {
-		Mockito.when(dataService.percentile(anyInt(),anyBoolean(), any(), anyInt())).thenReturn(new GridRest());
+	public void testSearchTextEndpoint() {
+		Mockito.when(dataService.searchText(anyString(), anyInt(), any(), anyInt())).thenReturn(new GridRest());
 
 		given()
 				.contentType(ContentType.URLENC)
-				.formParam("value", MIN_VALUE)
-				.formParam("delete", DELETE)
+				.formParam("value", SEARCH)
+				.formParam("typeSearch", TYPE_SEARCH_ALL)
 				.formParam("columns", StringUtils.join(COLUMNS, ","))
 				.formParam("idFile", ID_FILE)
 				.when()
-				.post("/data/percentile")
+				.post("/data/searchText")
 				.then()
 				.statusCode(200)
 				.body(notNullValue());
