@@ -93,18 +93,41 @@ public class StructureService {
 		TableRest table = dataService.getFileAsTable(idFile);
 
 		if(table != null) {
+			TableRest output = new TableRest();
+			int firstIndex = indexes.get(0);
 
-			List<List<String>> rows = table.getValues();
-			for (List<String> row : rows) {
+			int i = 0;
+			for (String header: table.getHeader()) {
+
+				//Only keep the first of "join indexes"
+				if(!indexes.contains(i) || firstIndex == i) {
+					output.addHeader(header);
+				}
+				i++;
+			}
+
+			i = 0;
+			for (List<String> row : table.getValues()) {
+				output.addRow();
+
 				StringBuilder newValue = new StringBuilder();
-				for (int column: indexes) {
-					newValue.append(row.get(column));
+				for (int numberColumn = 0; numberColumn < table.getHeader().size(); numberColumn++) {
+					String value = row.get(numberColumn);
+
+					if(!indexes.contains(numberColumn) || firstIndex == numberColumn) {
+						output.addValue(i, value);
+					}
+
+					if(indexes.contains(numberColumn)) {
+						newValue.append(value);
+					}
 				}
 
-				row.set(indexes.get(0), newValue.toString());
+				output.setValue(i, firstIndex, newValue.toString());
+				i++;
 			}
-			fileService.addChangeHistory(idFile, table, "Join columns");
-			return dataService.table2grid(table);
+			fileService.addChangeHistory(idFile, output, "Join columns");
+			return dataService.table2grid(output);
 		}
 		return null;
 	}
