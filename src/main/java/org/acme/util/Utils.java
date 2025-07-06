@@ -96,6 +96,10 @@ public class Utils {
 	}
 
 	public static String formatDate(Date d) {
+		if(d == null) {
+			return "";
+		}
+
 		SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		return format.format(d);
 	}
