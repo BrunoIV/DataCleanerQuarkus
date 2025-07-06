@@ -37,6 +37,9 @@ public class FileServiceTest {
 	private static final String TYPE_FILE = "table";
 	private static final String EXAMPLE_CSV = "a,b,c\nd,e,f\ng,h,i";
 
+	private static final String EXPECTED_SIZE = "Expected size";
+	private static final String EXPECTED_VALUE = "Expected value";
+
 	@Inject
 	private FileService fileService;
 
@@ -73,7 +76,7 @@ public class FileServiceTest {
 
 		String result = this.fileService.multipartToString(newForm);
 		assertNotNull(result);
-		assertEquals(expectedOutput, result);
+		assertEquals(expectedOutput, result, EXPECTED_VALUE);
 	}
 
 
@@ -93,7 +96,7 @@ public class FileServiceTest {
 		String result = this.fileService.getMultipartName(newForm);
 
 		assertNotNull(result);
-		assertEquals(expectedFileName, result);
+		assertEquals(expectedFileName, result, EXPECTED_VALUE);
 	}
 
 	@Test
@@ -102,8 +105,8 @@ public class FileServiceTest {
 		TableRest rs = new TableRest();
 
 		fileService.processJson(JsonParser.parseString(json), rs);
-		assertEquals(2, rs.getValues().size());
-		assertEquals(3, rs.getHeader().size());
+		assertEquals(2, rs.getValues().size(), EXPECTED_SIZE);
+		assertEquals(3, rs.getHeader().size(), EXPECTED_SIZE);
 	}
 
 	@Test
@@ -112,8 +115,8 @@ public class FileServiceTest {
 		TableRest rs = new TableRest();
 
 		fileService.processJson(JsonParser.parseString(json), rs);
-		assertEquals(1, rs.getValues().size());
-		assertEquals(3, rs.getHeader().size());
+		assertEquals(1, rs.getValues().size(), EXPECTED_SIZE);
+		assertEquals(3, rs.getHeader().size(), EXPECTED_SIZE);
 	}
 
 	@Test
@@ -127,7 +130,7 @@ public class FileServiceTest {
 
 		List<FileRest> result = this.fileService.getFiles();
 		assertNotNull(result);
-		assertEquals(result.size(), dbs.size());
+		assertEquals(result.size(), dbs.size(), EXPECTED_SIZE);
 	}
 
 
@@ -169,7 +172,7 @@ public class FileServiceTest {
 		assertTrue(result.contains(","));
 
 		//+1 including header
-		assertEquals(ROWS_GRID + 1, result.split("\n").length);
+		assertEquals(ROWS_GRID + 1, result.split("\n").length, EXPECTED_SIZE);
 	}
 
 	@Test
@@ -185,14 +188,14 @@ public class FileServiceTest {
 		Mockito.doNothing().when(fileDao).putFile(any(FileDb.class));
 
 		boolean result = this.fileService.renameFile(ID_FILE, NAME_FILE);
-		assertTrue(result);
+		assertTrue(result, EXPECTED_VALUE);
 	}
 
 	@Test
 	public void testRenameFileNull() {
 		when(fileDao.getFileById(anyInt())).thenReturn(null);
 		boolean result = this.fileService.renameFile(ID_FILE, NAME_FILE);
-		assertFalse(result);
+		assertFalse(result, EXPECTED_VALUE);
 	}
 
 	@Test
@@ -201,7 +204,7 @@ public class FileServiceTest {
 		Mockito.doNothing().when(fileDao).deleteFile(any(FileDb.class));
 
 		boolean result = this.fileService.deleteFiles(IDS_FILE);
-		assertTrue(result);
+		assertTrue(result, EXPECTED_VALUE);
 	}
 
 	@Test
@@ -209,7 +212,7 @@ public class FileServiceTest {
 		when(fileDao.getFileById(anyInt())).thenReturn(null);
 
 		boolean result = this.fileService.deleteFiles(IDS_FILE);
-		assertFalse(result);
+		assertFalse(result, EXPECTED_VALUE);
 	}
 
 	@Test
@@ -217,14 +220,14 @@ public class FileServiceTest {
 		Mockito.doNothing().when(fileDao).addFile(anyString(), anyString(), anyString());
 
 		boolean result = this.fileService.newFile(NAME_FILE, TYPE_FILE);
-		assertTrue(result);
+		assertTrue(result, EXPECTED_VALUE);
 	}
 
 
 	@Test
 	public void testNewFileNull() {
 		boolean result = this.fileService.newFile(NAME_FILE, "");
-		assertFalse(result);
+		assertFalse(result, EXPECTED_VALUE);
 	}
 
 	@Test
@@ -233,7 +236,7 @@ public class FileServiceTest {
 
 		String result = this.fileService.exportAsHtml(ID_FILE);
 		assertNotNull(result);
-		assertTrue(result.contains("<table"));
+		assertTrue(result.contains("<table"), EXPECTED_VALUE);
 	}
 
 	@Test
@@ -250,7 +253,7 @@ public class FileServiceTest {
 		Mockito.doNothing().when(fileDao).putFile(any(FileDb.class));
 
 		boolean result = this.fileService.saveFile(ID_FILE);
-		assertTrue(result);
+		assertTrue(result, EXPECTED_VALUE);
 	}
 
 	@Test
@@ -260,7 +263,7 @@ public class FileServiceTest {
 		Mockito.doNothing().when(fileDao).putFile(any(FileDb.class));
 
 		boolean result = this.fileService.saveFile(ID_FILE);
-		assertFalse(result);
+		assertFalse(result, EXPECTED_VALUE);
 	}
 
 
@@ -270,7 +273,7 @@ public class FileServiceTest {
 		Mockito.doNothing().when(fileDao).addFile(anyString(), anyString(), anyString());
 
 		boolean result = this.fileService.saveFileAs(ID_FILE, NAME_FILE);
-		assertTrue(result);
+		assertTrue(result, EXPECTED_VALUE);
 	}
 
 	@Test
@@ -279,23 +282,9 @@ public class FileServiceTest {
 		Mockito.doNothing().when(fileDao).addFile(anyString(), anyString(), anyString());
 
 		boolean result = this.fileService.saveFileAs(ID_FILE, NAME_FILE);
-		assertFalse(result);
+		assertFalse(result, EXPECTED_VALUE);
 	}
 
-	private GridRest getExampleGrid() {
-		GridRest grid = new GridRest();
-		grid.addHeader(new ColumnHeaderRest("id"));
-		grid.addHeader(new ColumnHeaderRest("name"));
-		grid.addHeader(new ColumnHeaderRest("surname"));
-
-		for(int i = 0; i < ROWS_GRID; i++){
-			grid.addValue(i, "id", "id_" + i);
-			grid.addValue(i, "name", "name_" + i);
-			grid.addValue(i, "surname", "surname_" + i);
-		}
-
-		return grid;
-	}
 
 	private TableRest getExampleTable() {
 		TableRest table = new TableRest();

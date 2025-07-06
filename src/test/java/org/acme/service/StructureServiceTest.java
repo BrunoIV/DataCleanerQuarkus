@@ -125,6 +125,7 @@ public class StructureServiceTest {
 		assertEquals(table.getHeader().size(), originalNumberItems - colsToDelete.size());
 	}
 
+
 	@Test
 	public void testDeleteColumnsNull() {
 		Mockito.when(dataService.getFileAsTable(anyInt())).thenReturn(null);
@@ -136,16 +137,13 @@ public class StructureServiceTest {
 	@Test
 	public void testJoinColumns() {
 		TableRest table = getExampleTable();
-		int originalNumberItems = table.getHeader().size();
 
 		Mockito.when(dataService.getFileAsTable(anyInt())).thenReturn(table);
 		Mockito.when(dataService.table2grid(any(TableRest.class))).thenReturn(getExampleGrid());
 		Mockito.doNothing().when(fileService).addChangeHistory(anyInt(), any(TableRest.class), anyString());
 
-//		List<Integer> cols = Arrays.asList(1,2);
-//		GridRest grid = structureService.joinColumns(cols, ID_FILE);
-//		assertNotNull(grid);
-//		assertEquals(grid.getHeader().size(), originalNumberItems - 1);
+		GridRest grid = structureService.joinColumns(Arrays.asList(1,2), ID_FILE);
+		assertNotNull(grid);
 	}
 
 	private GridRest getExampleGrid() {
